@@ -25,6 +25,7 @@
  */
 class Random {
     constructor() {
+        this.type = "Unknown";
         this.seed = 0;
     }
 
@@ -61,6 +62,8 @@ class RandomXorShift96 extends Random {
     constructor() {
         super();
         
+        this.type = "XorShift96";
+
         this.shiftY = 238979280;
         this.shiftZ = 158852560;
 
@@ -115,6 +118,8 @@ class RandomWELL512 extends Random {
     constructor() {
         super();
         
+        this.type = "WELL512";
+
         this.index = 0;
         this.state = Array.apply(0, Array(16)).map(function() { });
         this.xor   = new RandomXorShift96;
@@ -161,13 +166,11 @@ function CreateRandom(type) {
     var prng;
 
     switch(type) {
-    case "XorShift":
-    case "XorShift96":
+    case RandomXorShift96.type:
         prng = new RandomXorShift96();
         break;
 
-    case "WELL":
-    case "WELL512":
+    case RandomWELL512.type:
         prng = new RandomWELL512();
         break;
 

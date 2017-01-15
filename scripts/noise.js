@@ -14,161 +14,67 @@
  * limitations under the License.
  */
 
-
-//------------------------------------------------------------------------------------------
-// Noise 
-//------------------------------------------------------------------------------------------
-
-
 /** 
  * \class Noise
  * \brief Parent class of all noise implementations.
  */
 class Noise {
     constructor() {
-        this.type = "Unknown";
-        this.seed = 0;
+        this.type   = "Unknown";
+        this.seed   = 0;
+        this.gray   = true;
+        this.width  = 0;           // Width of the active image data (in pixels)
+        this.height = 0;           // Height of the active image data (in pixels)
+        this.length = 0;           // Total length of the active image data (in bytes [4 bytes per pixel])
     }
 
     setSeed(value) {
         this.seed = value;
     }
 
-    generate(imageData) {
-        if(imageData) {
-            var length = imageData.width * imageData.height * 4;
-
-            for(var i = 0; i < length; ++i) {
-                imageData.data[i] = 255;
-            }
-        }
-    }
-}
-
-
-//------------------------------------------------------------------------------------------
-// Noise - Random
-//------------------------------------------------------------------------------------------
-
-/** 
- * \class NoiseRandom
- * \brief Generates an image populated by the specified PRNG algorithm.
- */
-class NoiseRandom extends Noise {
-    constructor(prng) {
-        super();
-
-        this.type = "Random";
-        this.prng = CreateRandom(prng);
-        this.gray = true;
+    length() {
+        this.length = (this.width * this.height * 4);
     }
 
-    setSeed(value) {
-        super.setSeed(value);
-        this.prng.setSeed(value);
+    indexToXY(index, x, y) {
+        var pixIndex = index / 4;
+
+        y = (pixIndex / this.width);
+        x = (pixIndex % this.width);
+    }
+
+    xyToIndex(x, y) {
+        return (((y * this.width) + x) * 4);
+    }
+
+    setPixel(imageData, x, y, r, g, b, a) {
+        var index = this.xyToIndex(x, y);
+
+        imageData.data[index + 0] = r;
+        imageData.data[index + 1] = g;
+        imageData.data[index + 2] = b;
+        imageData.data[index + 3] = a;
+    }
+
+    generateGrayScale(imageData) {
+        
+    }
+
+    generateColor(imageData) {
+
     }
 
     generate(imageData) {
         if(imageData) {
-            var length = imageData.width * imageData.height * 4;
+            this.width  = imageData.width;
+            this.height = imageData.height;
+            this.length = (this.width * this.height * 4);
 
             if(this.gray) {
-                for(var i = 0; i < length; i += 4) {
-                    imageData.data[i + 0] = this.prng.next(0, 255);
-                    imageData.data[i + 1] = imageData.data[i + 0];
-                    imageData.data[i + 2] = imageData.data[i + 0];
-                    imageData.data[i + 3] = 255;
-                }
-
+                this.generateGrayScale(imageData);
             } else {
-                for(var i = 0; i < length; i += 4) {
-                    imageData.data[i + 0] = this.prng.next(0, 255);
-                    imageData.data[i + 1] = this.prng.next(0, 255);
-                    imageData.data[i + 2] = this.prng.next(0, 255);
-                    imageData.data[i + 3] = 255;
-                }
+                this.generateColor(imageData);
             }
         }
     }
-}
-
-
-//------------------------------------------------------------------------------------------
-// Noise - Perlin
-//------------------------------------------------------------------------------------------
-
-
-/**
- * \class NoisePerlin
- *
- * Implementation of classic Perlin Noise. 
- *
- * This is an adaptation of the C++ implementation found within Ocular Engine at:
- *
- *     https://github.com/ssell/OcularEngine/blob/master/OcularCore/include/Math/Noise/PerlinNoise.hpp
- *
- * Perlin Noise has three controlling variables:
- *
- *     - Octaves -
- *
- *     For each octave, a higher frequency/lower amplitude function will be added to the original.
- *     Additional octaves increase the definition of the resulting noise but may be computationally expensive.
- *     Typical values range from [0.0, 15.0] with the default being 6.0.
- *
- *     - Persistence -
- *
- *     The higher the persistence, the more of each succeeding octave will be added to the original.
- *     Very high persistence values can lead to output resembling raw (non-coherent) noise.
- *     Values range from [0.0, 1.0] with the default being 0.5.
- *
- *     - Scale - 
- *
- *     Scale can be thought of as a zoom-level. The lower the scale, the closer in the zoom and vice versa.
- *     Extremely low values can result in a blobby or solid output.
- *     Extremely high values can result in output resembling raw noise.
- *     Typical values range from [0.0001, 1.0] with the default being 0.01.
- *
- * For more information, visit Ken Perlin's page on Perlin Noise at:
- *
- *     http://mrl.nyu.edu/~perlin/doc/oscar.html
- */
-class NoisePerlin extends Noise {
-    constructor() {
-        super();
-
-        this.type        = "Perlin";
-        this.octaves     = 6.0;
-        this.persistence = 0.5;
-        this.scale       = 0.01;
-        this.seed        = 0;
-    }
-
-    generate(imageData) { 
-
-    }
-}
-
-
-//------------------------------------------------------------------------------------------
-// Noise - Factory
-//------------------------------------------------------------------------------------------
-
-
-function CreateNoise(type) {
-    var noise;
-
-    switch(type) {
-    case "Random":
-        noise = new NoiseRandom();
-        break;
-
-    case "Perlin":
-        noise = new NoisePerlin();
-        break;
-
-    default:
-        break;
-    }
-
-    return noise;
 }

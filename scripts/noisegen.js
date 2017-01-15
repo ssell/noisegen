@@ -18,11 +18,14 @@ $(document).ready(function() {
     var surface = new Surface();
     surface.clear(0, 0, 0);
 
-    var data = surface.getImageData();
-    var noise = new NoiseRandom("WELL512");
+    var data  = surface.getImageData();
+    var noise = new NoisePerlin();
     
-    noise.setSeed(1337);
-    noise.generate(data);
+    noise.gray = true;
+
+    var average = testNoise(noise, data, 10);
 
     surface.drawImage(data);
+
+    console.log("average = " + average + " ms");
 });
