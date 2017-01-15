@@ -60,34 +60,25 @@ class NoisePerlin extends Noise {
     }
 
     getRandom(x, y) {
-        var n0 = Math.trunc(x) + Math.trunc(y) * 57;
-        var n1 = (n0 << 13);
-        var n2 = int32(n1 ^ n0);
+        var n = int32(x) + int32(y) * 57;
+        n = (n << 13) ^ n;
 
-        var a0 = int32(int32(n2 * n2) * 15731);
-        var a  = int32(a0 + 789221);
-        var b0 = int32(n2 * a);
-        var b  = int32(b0 + int32(1376312589));
-        var c  = int32(b & 2147483647);
-        var d  = c / 1073741824.0;
-
-        var result = (1.0 - d);
-
-        return result;
+        // Note the gratuitous use of 'int32'. This is because the original C/C++ algorithms rely on 32-bit integer overflow behavior.
+        return (1.0 - int32(int32(int32(n * int32(int32(int32(n * n) * 15731) + 789221)) + 1376312589) & 2147483647) * 0.00000000093132257);
     }
 
     getSmoothNoise(x, y) {
         var corners = (this.getRandom((x - 1.0), (y - 1.0)) + 
                        this.getRandom((x + 1.0), (y - 1.0)) +
                        this.getRandom((x - 1.0), (y + 1.0)) +
-                       this.getRandom((x + 1.0), (y + 1.0))) / 16.0;
+                       this.getRandom((x + 1.0), (y + 1.0))) * 0.0625;
 
         var sides = (this.getRandom((x - 1.0), y) +
                      this.getRandom((x + 1.0), y) + 
                      this.getRandom(x, (y - 1.0)) + 
-                     this.getRandom(x, (y + 1.0))) / 8.0;
+                     this.getRandom(x, (y + 1.0))) * 0.125;
 
-        var center = this.getRandom(x, y) / 4.0;
+        var center = this.getRandom(x, y) * 0.25;
 
         var result = (corners + sides + center);
 
@@ -95,8 +86,8 @@ class NoisePerlin extends Noise {
     }
 
     getInterpolatedNoise(x, y) {
-        var wholeX = Math.trunc(x);
-        var wholeY = Math.trunc(y);
+        var wholeX = int32(x);
+        var wholeY = int32(y);
         var fracX  = x - wholeX;
         var fracY  = y - wholeY;
 
@@ -133,10 +124,9 @@ class NoisePerlin extends Noise {
     generateGrayScale(imageData) {
         var x = 0;
         var y = 0;
-
+        
         for(var x = 0; x < this.width; ++x) {
             for(var y = 0; y < this.height; ++y) {
-
                 // Perlin noise generates values on the range of [-1.0, 1.0] but for our pixels we require a color on the range [0, 255]
                 var color = ((this.getValue(x + this.seed, y + this.seed) + 1.0) * 0.5) * 255;
                 this.setPixel(imageData, x, y, color, color, color, 255);

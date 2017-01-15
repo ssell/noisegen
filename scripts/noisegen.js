@@ -23,7 +23,7 @@ $(document).ready(function() {
     
     noise.gray = true;
 
-    var average = testNoise(noise, data, 10);
+    var average = testNoise(noise, data, 50);
 
     surface.drawImage(data);
 
