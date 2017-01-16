@@ -15,17 +15,9 @@
  */
 
 $(document).ready(function() {
+
     var surface = new Surface();
     surface.clear(0, 0, 0);
 
-    var data  = surface.getImageData();
-    var noise = new NoisePerlin();
-    
-    noise.gray = true;
-
-    var average = testNoise(noise, data, 50);
-
-    surface.drawImage(data);
-
-    console.log("average = " + average + " ms");
+    generateNoiseMultithreaded(surface, "Perlin", 2);
 });

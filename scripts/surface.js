@@ -49,4 +49,8 @@ class Surface {
     drawImage(data) {
         this.context.putImageData(data, 0, 0);
     }
+
+    drawImage(data, startX, endX, startY, endY) {
+        this.context.putImageData(data, 0, 0, startX, startY, (endX - startX), (endY - startY));
+    }
 }
