@@ -39,7 +39,7 @@ class Performance {
  * \param[in] noise          String name of the noise algorithm to employ.
  * \param[in] numWorkersSide Number of workers to spawn per surface dimension.
  */
-function generateNoiseMultithreaded(surface, noise, numWorkersSide) {
+function generateNoiseMultithreaded(surface, noise, params, numWorkersSide) {
 
 	var image = surface.getImageData();
 
@@ -57,7 +57,7 @@ function generateNoiseMultithreaded(surface, noise, numWorkersSide) {
 			var startY = (y * heightStep);
 			var endY   = ((y + 1) * heightStep);
 
-			worker.postMessage({image: image, noise: noise, startX: startX, endX: endX, startY: startY, endY: endY});
+			worker.postMessage({image: image, noise: noise, noiseParams: params, startX: startX, endX: endX, startY: startY, endY: endY});
 
 			worker.onmessage = function(e) {  
 				surface.drawImage(e.data.image, e.data.startX, e.data.endX, e.data.startY, e.data.endY);

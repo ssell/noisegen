@@ -19,5 +19,7 @@ $(document).ready(function() {
     var surface = new Surface();
     surface.clear(0, 0, 0);
 
-    generateNoiseMultithreaded(surface, "Perlin", 2);
+    var params = "seed:0;octaves:8;persistence:0.8;scale:0.05";
+
+    generateNoiseMultithreaded(surface, "Perlin", params, 2);
 });

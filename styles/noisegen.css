@@ -1,4 +1,64 @@
 body
 {
-	background-color: #F0F0F0;
+	background-color: #333;
+}
+
+#contents
+{
+	position: absolute;
+
+	left: 1%;
+	top: 1%;
+	right: 1%;
+	bottom: 1%;
+
+	width: 98%;
+	height: 98%;
+
+	overflow: hidden;
+}
+
+#surface_container
+{
+	right: 50%;
+    bottom: 50%;
+    transform: translate(50%,50%);
+    position: absolute;
+}
+
+#surface
+{
+
+}
+
+#control_panel
+{
+	position: absolute;
+
+	left: 1%;
+	top: 1%;
+
+	z-index: 1;
+
+	width: 350px;
+	height: 98%;
+
+	background-color: #444;
+	border: 1px solid #111;
+}
+
+#color_panel
+{
+	position: absolute;
+
+	right: 1%;
+	top: 1%;
+
+	z-index: 1;
+
+	width: 250px;
+	height: 98%;
+
+	background-color: #444;
+	border: 1px solid #111;
 }

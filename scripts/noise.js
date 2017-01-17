@@ -79,11 +79,46 @@ function interpolateCosine(from, to, frac) {
 class Noise {
     constructor() {
 
+        this.params = "";
         this.seed   = 0;
         this.gray   = true;
         this.width  = 0;           // Width of the active image data (in pixels)
         this.height = 0;           // Height of the active image data (in pixels)
         this.length = 0;           // Total length of the active image data (in bytes [4 bytes per pixel])
+    }
+
+    setParam(param, value) {
+        var result = true;
+
+        switch(param) {
+        case "seed":
+            this.seed = Number(value);
+            break;
+
+        case "gray":
+            this.gray = (value == "true");
+            break;
+
+        default:
+            result = false;
+            break;
+        }
+
+        return result;
+    }
+
+    setParams(params) {
+        var paramsSplit = params.split(";");
+
+        for(var i = 0; i < paramsSplit.length; ++i) {
+            var paramSegments = paramsSplit[i].split(":");
+            var paramName = paramSegments[0];
+            var paramVal = paramSegments[1];
+
+            this.setParam(paramName, paramVal);
+
+            console.log("name = " + paramName + " | value = " + paramVal);
+        }
     }
 
     setSeed(value) {
@@ -218,7 +253,34 @@ class NoisePerlin extends Noise {
         this.octaves     = 6;
         this.persistence = 0.5;
         this.scale       = 0.01;
-        this.seed        = 0;
+
+        this.params = "octaves: int_slider 1 20;persistence: float_slider 0.0 1.0;scale: float_slider 0.0001 1.0";
+    }
+
+    setParam(param, value) {
+        var result = super.setParam(param, value);
+
+        if(!result) {
+            switch(param) {
+            case "octaves":
+                this.octaves = Number(value);
+                break;
+
+            case "persistence":
+                this.persistence = Number(value);
+                break;
+
+            case "scale":
+                this.scale = Number(value);
+                break;
+
+            default:
+                result = true;
+                break;
+            }
+        }
+
+        return result;
     }
 
     getRandom(x, y) {
@@ -329,11 +391,13 @@ self.onmessage = function(e) {
     if(data) {
         var image  = data.image;
         var noise  = createNoise(data.noise);
+        var params = data.noiseParams;
         var startX = data.startX;
         var endX   = data.endX;
         var startY = data.startY;
         var endY   = data.endY;
 
+        noise.setParams(params);
         noise.generate(image, startX, endX, startY, endY);
 
         postMessage({ image: data.image, startX: startX, endX: endX, startY: startY, endY: endY});
