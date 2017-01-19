@@ -14,6 +14,16 @@
  * limitations under the License.
  */
 
+/**
+ * noise.js
+ *
+ * This script houses all of the noise algorithm implementations and
+ * any associated functions (math, helpers, etc.).
+ *
+ * It also contains general functions for noise creation, parameter
+ * retrieval, and multi-thread worker execution.
+ */
+
 //-----------------------------------------------------------------------------------------
 // Math Utilities
 //-----------------------------------------------------------------------------------------
@@ -119,6 +129,10 @@ class Noise {
 
             console.log("name = " + paramName + " | value = " + paramVal);
         }
+    }
+
+    static getParams() {
+        return "";
     }
 
     setSeed(value) {
@@ -253,8 +267,6 @@ class NoisePerlin extends Noise {
         this.octaves     = 6;
         this.persistence = 0.5;
         this.scale       = 0.01;
-
-        this.params = "octaves: int_slider 1 20;persistence: float_slider 0.0 1.0;scale: float_slider 0.0001 1.0";
     }
 
     setParam(param, value) {
@@ -281,6 +293,11 @@ class NoisePerlin extends Noise {
         }
 
         return result;
+    }
+
+    static getParams() {
+        super.getParams();
+        return "octaves:int_range 1 20 5;persistence:float_range 0.0 1.0 0.5;scale:float_range 0.0001 1.0 0.01;"
     }
 
     getRandom(x, y) {
@@ -371,6 +388,21 @@ function createNoise(type) {
     switch(type) {
     case "Perlin":
         result = new NoisePerlin();
+        break;
+
+    default:
+        break; 
+    }
+
+    return result;
+}
+
+function getUIParams(type) {
+    var result = "";
+
+    switch(type) {
+    case "Perlin":
+        result = NoisePerlin.getParams();
         break;
 
     default:

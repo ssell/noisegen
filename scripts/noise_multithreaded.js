@@ -14,6 +14,13 @@
  * limitations under the License.
  */
 
+/**
+ * noise_multithreaded.js
+ *
+ * This script is responsible for the creation and launching of workers
+ * used in parallel noise generation.
+ */
+
 class Performance {
 	constructor(numExpected) { 
 		this.numExpected = numExpected;

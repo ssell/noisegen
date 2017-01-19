@@ -14,12 +14,70 @@
  * limitations under the License.
  */
 
+/**
+ * noisegen.js
+ *
+ * This script is responsible for the general behavior of the noisegen page.
+ * This includes, but is not limited to, the following:
+ *
+ *     - Initiating UI creation
+ *     - Responding to UI events
+ *     - Initiating noise generation
+ *     - Filling surface
+ *     - Reszing surface
+ */
+
+var gSurface = null;
+
+function populateAlgorithmList() {
+	$("#noise_algorithms").append(
+		"<option value='Perlin'>Perlin</option>" +
+		"<option value='Random'>Random</option>")
+}
+
+function getSelectedAlgorithm() {
+	return $("#noise_algorithms").val();
+}
+
+function buildParamsList() {
+	var params = "";
+
+	$(".noise_property_value").each(function() {
+		var id   = $(this).attr('id');
+		var temp = id.split("_");
+		var name = temp[0];
+		var value = $(this).text();
+
+		params += name + ":" + value + ";";
+	});
+
+	return params;
+}
+
+function updateInput(id) {
+	var obj = $("#" + id);
+	console.log("'" + id + "' changed -> " + obj);
+	if(obj) {
+		var newVal = obj.val();
+		console.log("new value = " + newVal);
+		$("#" + id + "_value").text(newVal);
+	}
+}
+
+function generate() {
+	var params = buildParamsList();
+
+    gSurface.clear(0, 0, 0);
+	generateNoiseMultithreaded(gSurface, getSelectedAlgorithm(), params, 2);
+}
+
 $(document).ready(function() {
 
-    var surface = new Surface();
-    surface.clear(0, 0, 0);
+    gSurface = new Surface();
 
-    var params = "seed:0;octaves:8;persistence:0.8;scale:0.05";
+	populateAlgorithmList();
+    buildUI(getUIParams(getSelectedAlgorithm()));
 
-    generateNoiseMultithreaded(surface, "Perlin", params, 2);
+    $("#generate_button").click(function() { generate(); });
+    $("input").change(function(){ updateInput($(this).attr('id')); });
 });

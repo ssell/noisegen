@@ -1,26 +1,29 @@
 body
 {
-	background-color: #333;
+    color: #AAA;
+    background-color: #333;
+    font-family: 'Lato', sans-serif;
+    font-size: 14px;
 }
 
 #contents
 {
-	position: absolute;
+    position: absolute;
 
-	left: 1%;
-	top: 1%;
-	right: 1%;
-	bottom: 1%;
+    left: 1%;
+    top: 1%;
+    right: 1%;
+    bottom: 1%;
 
-	width: 98%;
-	height: 98%;
+    width: 98%;
+    height: 98%;
 
-	overflow: hidden;
+    overflow: hidden;
 }
 
 #surface_container
 {
-	right: 50%;
+    right: 50%;
     bottom: 50%;
     transform: translate(50%,50%);
     position: absolute;
@@ -33,32 +36,81 @@ body
 
 #control_panel
 {
-	position: absolute;
+    position: absolute;
 
-	left: 1%;
-	top: 1%;
+    left: 1%;
+    top: 1%;
 
-	z-index: 1;
+    z-index: 1;
 
-	width: 350px;
-	height: 98%;
-
-	background-color: #444;
-	border: 1px solid #111;
+    width: 350px;
 }
 
-#color_panel
+.ui_category
 {
-	position: absolute;
+    width: 330px;
 
-	right: 1%;
-	top: 1%;
+    background-color: rgb(28, 28, 28);
+    border: 0px solid #111;
 
-	z-index: 1;
+    margin-bottom: 5px;
+    padding: 10px;
+}
 
-	width: 250px;
-	height: 98%;
+.category_title
+{
+    width: 100%;
+    border-bottom: 1px solid #555;
+    margin-bottom: 20px;
+    font-size: 16px;
+}
 
-	background-color: #444;
-	border: 1px solid #111;
+.ui_holder
+{
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+.ui_title
+{
+    color: #CCC;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.ui_element
+{
+    display: inline-block;
+
+    width: 220px;
+
+    margin-left: 15px;
+    margin-right: 15px;
+
+    background-color: #CCC;
+    border: 0px solid black;
+
+    padding: 2px;
+}
+
+.big_button
+{
+    background-color: #CCC;
+    border: 1px solid #333;
+    border-radius: 5px;
+
+    width: 100px;
+    height: 25px;
+    margin-top: 15px;
+}
+
+.big_button:hover
+{
+    background-color: #DDD;
+    cursor: pointer;
+}
+
+.noise_property_value
+{
+    display: inline-block;
 }

@@ -15,13 +15,20 @@
  */
 
 /**
+ * surface.js
+ *
+ * This script contains the Surface class definition which is a wrapper
+ * around the HTML5 canvas object.
+ */
+
+/**
  * \class Surface
  * \brief Canvas wrapper for simple image rendering.
  */
 class Surface {
     constructor() {
-        this.width     = 512;
-        this.height    = 512;
+        this.width     = 2000;
+        this.height    = 1000;
         this.canvas    = document.getElementById("surface");
         this.context   = this.canvas.getContext("2d");
         this.imageData = this.context.createImageData(this.width, this.height);

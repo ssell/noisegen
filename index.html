@@ -2,12 +2,14 @@
 <head>
     <title>noisegen</title>
 
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato">
     <link rel="stylesheet" href="styles/noisegen.css">
     <link rel="stylesheet" href="styles/surface.css">
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
     <script src="scripts/random.js"></script>
     <script src="scripts/surface.js"></script>
+    <script src="scripts/ui_builder.js"></script>
     <script src="scripts/noise.js"></script>
     <script src="scripts/noise_multithreaded.js"></script>
     <script src="scripts/noisegen.js"></script>
@@ -16,12 +18,45 @@
 <body>
     <div id="contents">
         <div id="surface_container">
-            <canvas id="surface" width="512" height="512">
+            <canvas id="surface" width="2000" height="1000">
                 Your Browser Does Not Support Canvases
             </canvas>
         </div>
         <div id="control_panel">
-        </div>
+            <div id="ui_general" class="ui_category">
+                <div class="category_title">
+                    General Properties
+                </div>
+                <div>
+                    <div class="ui_holder ui_title">Noise Algorithm</div>
+                    <div class="ui_holder"><select id="noise_algorithms" name="noise_algorithms" class="ui_element"></select></div>
+                </div>
+                <div>
+                    <div class="ui_holder ui_title">Width</div>
+                    <div class="ui_holder"><input type="number" class="ui_element"></div>
+                </div>
+                <div>
+                    <div class="ui_holder ui_title">Height</div>
+                    <div class="ui_holder"><input type="number" class="ui_element"></div>
+                </div>
+            </div>
+            <div id="ui_color" class="ui_category">
+                <div class="category_title">
+                    Color Properties
+                </div>
+            </div>
+            <div id="ui_noise" class="ui_category">
+                <div class="category_title">
+                    Noise Properties
+                </div>
+            </div>
+
+            <div>
+                <div class="ui_holder">
+                    <button id="generate_button" class="big_button" type="button">Generate</button>
+                    <button id="export_button" class="big_button" style="margin-left: 5px;" type="button">Export</button>
+                </div>
+            </div>
     </div>
 </body>
 </html>
