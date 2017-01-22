@@ -29,54 +29,102 @@
 
 var gSurface = null;
 
+/**
+ * Populates the #noise_algorithms select element with all
+ * available noise algorithms that can be used to generate the image.
+ */
 function populateAlgorithmList() {
-	$("#noise_algorithms").append(
-		"<option value='Perlin'>Perlin</option>" +
-		"<option value='Random'>Random</option>")
+    $("#noise_algorithms").append(
+        "<option value='Perlin'>Perlin</option>" +
+        "<option value='Random'>Random</option>")
 }
 
+/**
+ * Returns the selected noise algorithm string.
+ */
 function getSelectedAlgorithm() {
-	return $("#noise_algorithms").val();
+    return $("#noise_algorithms").val();
 }
 
-function buildParamsList() {
-	var params = "";
+/**
+ * Builds the noise properties parameters list used in image generation.
+ */
+function buildNoiseParamsList() {
+    var params = "";
 
-	$(".noise_property_value").each(function() {
-		var id   = $(this).attr('id');
-		var temp = id.split("_");
-		var name = temp[0];
-		var value = $(this).text();
+    $(".noise_property_value").each(function() {
+        var id   = $(this).attr('id');
+        var temp = id.split("_");
+        var name = temp[0];
+        var value = $(this).text();
 
-		params += name + ":" + value + ";";
-	});
+        params += name + ":" + value + ";";
+    });
 
-	return params;
+    return params;
 }
 
-function updateInput(id) {
-	var obj = $("#" + id);
-	console.log("'" + id + "' changed -> " + obj);
-	if(obj) {
-		var newVal = obj.val();
-		console.log("new value = " + newVal);
-		$("#" + id + "_value").text(newVal);
-	}
-}
+/**
+ * Updates the dimensions of the surface canvas.
+ */
+function updateDimensions() {
 
-function generate() {
-	var params = buildParamsList();
+    // First check if there is a set dimension.
+    // If not, we default to the document dimensions.
 
+    var width_element  = $("#surface_width");
+    var height_element = $("#surface_height");
+
+    var width  = Math.trunc(Number(width_element.val()));
+    var height = Math.trunc(Number(height_element.val()));
+
+    if(width == 0) {
+        width = $(document).width();
+    }
+
+    if(height == 0) {
+        height = $(document).height();
+    }
+
+    console.log("w = " + width + " | h = " + height);
+
+    width_element.val(width);
+    height_element.val(height);
+
+    gSurface.resize(width, height);
     gSurface.clear(0, 0, 0);
-	generateNoiseMultithreaded(gSurface, getSelectedAlgorithm(), params, 2);
+}
+
+/**
+ * Updates the id_value display on input change.
+ * This is used by different ui elements such as the range sliders.
+ */
+function updateInput(id) {
+    var obj = $("#" + id);
+
+    if(obj) {
+        var newVal = obj.val();
+        $("#" + id + "_value").text(newVal);
+    }
+}
+
+/**
+ * Generates the noise image.
+ */
+function generate() {
+    var noiseParams = buildNoiseParamsList();
+
+    updateDimensions();
+    generateNoiseMultithreaded(gSurface, getSelectedAlgorithm(), noiseParams, 2);
 }
 
 $(document).ready(function() {
 
     gSurface = new Surface();
 
-	populateAlgorithmList();
+    populateAlgorithmList();
     buildUI(getUIParams(getSelectedAlgorithm()));
+    updateDimensions();
 
     $("#generate_button").click(function() { generate(); });
     $("input").change(function(){ updateInput($(this).attr('id')); });

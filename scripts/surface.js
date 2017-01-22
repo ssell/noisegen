@@ -46,6 +46,9 @@ class Surface {
             this.canvas.width  = width;
             this.canvas.height = height;
             this.imageData     = this.context.createImageData(width, height);
+
+            $("#surface").attr("width", width);
+            $("#surface").attr("height", height);
         }
     }
 
