@@ -65,6 +65,13 @@ function buildNoiseParamsList() {
 }
 
 /**
+ * Rounds the provided number down to the nearest even integer.
+ */
+function roundDownToEven(value) {
+    return (2.0 * Math.floor(value * 0.5));
+}
+
+/**
  * Updates the dimensions of the surface canvas.
  */
 function updateDimensions() {
@@ -75,8 +82,8 @@ function updateDimensions() {
     var width_element  = $("#surface_width");
     var height_element = $("#surface_height");
 
-    var width  = Math.trunc(Number(width_element.val()));
-    var height = Math.trunc(Number(height_element.val()));
+    var width  = Number(width_element.val());
+    var height = Number(height_element.val());
 
     if(width == 0) {
         width = $(document).width();
@@ -85,6 +92,9 @@ function updateDimensions() {
     if(height == 0) {
         height = $(document).height();
     }
+
+    width  = roundDownToEven(width);
+    height = roundDownToEven(height);
 
     width_element.val(width);
     height_element.val(height);
