@@ -62,8 +62,6 @@ function buildUI(params) {
      *     name: type param0 param1 ... paramN defaultValue;
      */
 
-    console.log("params = " + params);
-
     var html = "";
     var properties = params.split(";");
 
@@ -76,12 +74,8 @@ function buildUI(params) {
 
         if(propertyName.length) {
 
-            console.log("Property name = " + propertyName);
-
             var propertyParams = temp[1].split(" ");
             var propertyType = propertyParams[0];
-
-            console.log("Property type = " + propertyType);
 
             switch(propertyType) {
             case "int_range":

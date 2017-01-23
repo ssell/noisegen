@@ -81,7 +81,6 @@ function interpolateCosine(from, to, frac) {
 // Noise
 //-----------------------------------------------------------------------------------------
 
-
 /** 
  * \class Noise
  * \brief Parent class of all noise implementations.
@@ -96,7 +95,6 @@ class Noise {
         this.height = 0;           // Height of the active image data (in pixels)
         this.length = 0;           // Total length of the active image data (in bytes [4 bytes per pixel])
     }
-
     setParam(param, value) {
         var result = true;
 
@@ -126,8 +124,6 @@ class Noise {
             var paramVal = paramSegments[1];
 
             this.setParam(paramName, paramVal);
-
-            console.log("name = " + paramName + " | value = " + paramVal);
         }
     }
 
@@ -309,38 +305,39 @@ class NoisePerlin extends Noise {
     }
 
     getSmoothNoise(x, y) {
-        var corners = (this.getRandom((x - 1.0), (y - 1.0)) + 
-                       this.getRandom((x + 1.0), (y - 1.0)) +
-                       this.getRandom((x - 1.0), (y + 1.0)) +
-                       this.getRandom((x + 1.0), (y + 1.0))) * 0.0625;
+        const corners = (this.getRandom((x - 1.0), (y - 1.0)) + 
+                         this.getRandom((x + 1.0), (y - 1.0)) +
+                         this.getRandom((x - 1.0), (y + 1.0)) +
+                         this.getRandom((x + 1.0), (y + 1.0))) * 0.0625;
 
-        var sides = (this.getRandom((x - 1.0), y) +
-                     this.getRandom((x + 1.0), y) + 
-                     this.getRandom(x, (y - 1.0)) + 
-                     this.getRandom(x, (y + 1.0))) * 0.125;
+        const sides   = (this.getRandom((x - 1.0), y) +
+                         this.getRandom((x + 1.0), y) + 
+                         this.getRandom(x, (y - 1.0)) + 
+                        
+                         this.getRandom(x, (y + 1.0))) * 0.125;
 
-        var center = this.getRandom(x, y) * 0.25;
+        const center  = this.getRandom(x, y) * 0.25;
 
-        var result = (corners + sides + center);
+        const result  = (corners + sides + center);
 
         return result;
     }
 
     getInterpolatedNoise(x, y) {
-        var wholeX = int32(x);
-        var wholeY = int32(y);
-        var fracX  = x - wholeX;
-        var fracY  = y - wholeY;
+        const wholeX = int32(x);
+        const wholeY = int32(y);
+        const fracX  = x - wholeX;
+        const fracY  = y - wholeY;
 
-        var value0 = this.getSmoothNoise(wholeX, wholeY);
-        var value1 = this.getSmoothNoise((wholeX + 1.0), wholeY);
-        var value2 = this.getSmoothNoise(wholeX, (wholeY + 1.0));
-        var value3 = this.getSmoothNoise((wholeX + 1.0), (wholeY + 1.0));
+        const value0 = this.getSmoothNoise(wholeX, wholeY);
+        const value1 = this.getSmoothNoise((wholeX + 1.0), wholeY);
+        const value2 = this.getSmoothNoise(wholeX, (wholeY + 1.0));
+        const value3 = this.getSmoothNoise((wholeX + 1.0), (wholeY + 1.0));
 
-        var interpolated0 = interpolateLinear(value0, value1, fracX);
-        var interpolated1 = interpolateLinear(value2, value3, fracX);
+        const interpolated0 = interpolateLinear(value0, value1, fracX);
+        const interpolated1 = interpolateLinear(value2, value3, fracX);
 
-        var result = interpolateLinear(interpolated0, interpolated1, fracY);
+        const result = interpolateLinear(interpolated0, interpolated1, fracY);
 
         return result;
     }
@@ -365,12 +362,16 @@ class NoisePerlin extends Noise {
     generate(imageData, startX, endX, startY, endY) {
         super.generate(imageData, startX, startY, endY);
 
+        const progressStep = (endY - startY);
+
         for(var x = startX; x < endX; ++x) {
             for(var y = startY; y < endY; ++y) {
                 // Perlin noise generates values on the range of [-1.0, 1.0] but for our pixels we require a color on the range [0, 255]
                 var color = ((this.getValue(x + this.seed, y + this.seed) + 1.0) * 0.5) * 255;
                 this.setPixel(imageData, x, y, color, color, color, 255);
             }
+            
+            postMessage({ progress: progressStep });
         }
     }
 }

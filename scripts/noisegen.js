@@ -86,8 +86,6 @@ function updateDimensions() {
         height = $(document).height();
     }
 
-    console.log("w = " + width + " | h = " + height);
-
     width_element.val(width);
     height_element.val(height);
 
@@ -108,14 +106,31 @@ function updateInput(id) {
     }
 }
 
+function toggleGenerateButton() {
+    $("#generate_button").prop('disabled', function(i, v) { return !v; });
+}
+
+function generateStop() {
+
+    NoiseProgressBar.stop();
+
+    toggleGenerateButton();
+
+    console.log("Noise '" + getSelectedAlgorithm() + "' (" + gSurface.width + " x " + gSurface.height + ") generated in " + NoiseProgressBar.elapsed() + "ms");
+}
+
 /**
  * Generates the noise image.
  */
-function generate() {
+function generateStart() {
+
+    NoiseProgressBar.start(gSurface.size());
+
+    toggleGenerateButton();
     var noiseParams = buildNoiseParamsList();
 
     updateDimensions();
-    generateNoiseMultithreaded(gSurface, getSelectedAlgorithm(), noiseParams, 2);
+    generateNoiseMultithreaded(gSurface, getSelectedAlgorithm(), noiseParams, 2, generateStop);
 }
 
 $(document).ready(function() {
@@ -126,6 +141,7 @@ $(document).ready(function() {
     buildUI(getUIParams(getSelectedAlgorithm()));
     updateDimensions();
 
-    $("#generate_button").click(function() { generate(); });
+    $("#generate_button").click(function() { generateStart(); });
+    $("#export_button").click(function() { });
     $("input").change(function(){ updateInput($(this).attr('id')); });
 });

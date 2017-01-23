@@ -21,24 +21,6 @@
  * used in parallel noise generation.
  */
 
-class Performance {
-	constructor(numExpected) { 
-		this.numExpected = numExpected;
-		this.numTracked  = 0;
-		this.startTime   = performance.now();
-		this.elapsed     = 0;
-	}
-
-	track() {
-		this.numTracked++;
-
-		if(this.numTracked == this.numExpected) {
-			this.elapsed = (performance.now() - this.startTime);
-			console.log("Total Elapsed: " + this.elapsed + " ms");
-		}
-	}
-}
-
 /**
  * Spawns a number of workers to populate the provided surface with noise.
  *
@@ -46,14 +28,15 @@ class Performance {
  * \param[in] noise          String name of the noise algorithm to employ.
  * \param[in] numWorkersSide Number of workers to spawn per surface dimension.
  */
-function generateNoiseMultithreaded(surface, noise, params, numWorkersSide) {
-
+function generateNoiseMultithreaded(surface, noise, params, numWorkersSide, endCallback) {
+	
 	var image = surface.getImageData();
 
 	var widthStep  = image.width / numWorkersSide;
 	var heightStep = image.height / numWorkersSide;
 
-	var perf = new Performance((numWorkersSide * numWorkersSide));
+	var numWorkers = (numWorkersSide * numWorkersSide);
+	var numWorkersComplete = 0;
 
 	for(var x = 0; x < numWorkersSide; ++x) {
 		for(var y = 0; y < numWorkersSide; ++y) {
@@ -67,8 +50,16 @@ function generateNoiseMultithreaded(surface, noise, params, numWorkersSide) {
 			worker.postMessage({image: image, noise: noise, noiseParams: params, startX: startX, endX: endX, startY: startY, endY: endY});
 
 			worker.onmessage = function(e) {  
-				surface.drawImage(e.data.image, e.data.startX, e.data.endX, e.data.startY, e.data.endY);
-				perf.track();
+				if(e.data.progress) { 
+					NoiseProgressBar.update(e.data.progress);
+				} else {
+					surface.drawImage(e.data.image, e.data.startX, e.data.endX, e.data.startY, e.data.endY);
+					numWorkersComplete++;
+
+					if(numWorkersComplete == numWorkers) {
+						endCallback();
+					}
+				}
 			};
 		}
 	}
