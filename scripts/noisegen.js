@@ -90,7 +90,7 @@ function updateDimensions() {
     height_element.val(height);
 
     gSurface.resize(width, height);
-    gSurface.clear(0, 0, 0);
+    gSurface.clear(51, 51, 51);
 }
 
 /**
@@ -110,13 +110,25 @@ function toggleGenerateButton() {
     $("#generate_button").prop('disabled', function(i, v) { return !v; });
 }
 
+function enableExportButton() {
+    $("#export_button").prop('disabled', '');
+}
+
 function generateStop() {
 
     NoiseProgressBar.stop();
 
     toggleGenerateButton();
+    enableExportButton();
 
     console.log("Noise '" + getSelectedAlgorithm() + "' (" + gSurface.width + " x " + gSurface.height + ") generated in " + NoiseProgressBar.elapsed() + "ms");
+}
+
+function triggerExport() {
+    var a = $("<a>").attr("href", gSurface.getURL()).attr("download", "noise.png").appendTo("body");
+
+    a[0].click();
+    a.remove();
 }
 
 /**
@@ -142,6 +154,6 @@ $(document).ready(function() {
     updateDimensions();
 
     $("#generate_button").click(function() { generateStart(); });
-    $("#export_button").click(function() { });
+    $("#export_button").click(function() { triggerExport(); });
     $("input").change(function(){ updateInput($(this).attr('id')); });
 });

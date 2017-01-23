@@ -27,8 +27,8 @@
  */
 class Surface {
     constructor() {
-        this.width     = 2000;
-        this.height    = 1000;
+        this.width     = 1;
+        this.height    = 1;
         this.canvas    = document.getElementById("surface");
         this.context   = this.canvas.getContext("2d");
         this.imageData = this.context.createImageData(this.width, this.height);
@@ -66,5 +66,10 @@ class Surface {
 
     size() {
         return (this.width * this.height);
+    }
+
+    getURL() {
+        var data = this.canvas.toDataURL();
+        return data.replace(/^data:image\/[^;]/, 'data:application/octet-stream');
     }
 }
