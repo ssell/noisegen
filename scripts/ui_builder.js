@@ -26,8 +26,20 @@ function toTitleCase(str)
     return str.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
 }
 
-function buildTitle(title, value) {
-    return "<div class='ui_holder ui_title'>" + toTitleCase(title) + ": <div id='" + title + "_value' class='noise_property_value'>" + value + "</div></div>";
+function buildTitle(title, value, valuehidden) {
+    return "<div class='ui_holder ui_title'>" + toTitleCase(title) + ": <div id='" + title + "_value' class='noise_property_value' " + (valuehidden ? "style='display:none;'" : "") + ">" + value + "</div></div>";
+}
+
+function buildInt(id, defaultVal) {
+    return "<div class='ui_holder'><input id='" + id + "' class='ui_element' value='" + defaultVal + "'></div>";
+}
+
+function buildUint(id, defaultVal) {
+    return "<div class='ui_holder'><input id='" + id + "' class='ui_element' value='" + defaultVal + "'></div>";
+}
+
+function buildFloat(id, defaultVal) {
+    return "<div class='ui_holder'><input id='" + id + "' class='ui_element' value='" + defaultVal + "'></div>";
 }
 
 function buildRangeInt(id, minVal, maxVal, defaultVal) {
@@ -54,12 +66,33 @@ function buildRangeFloat(id, minVal, maxVal, defaultVal) {
             "</div>";
 }
 
+function buildSelect(id, values) {
+    var html = "<div class='ui_holder'><select id='" + id + "' class='ui_element'>";
+
+    for(var i = 1; i < values.length; ++i) { 
+        html += "<option value='" + values[i] + "'>" + values[i] + "</option>"
+    }
+
+    html += "</select></div>";
+
+    return html;
+}
+
 function buildUI(params) {
 
     /**
      * Noise properties are formatted as follows:
      *
      *     name: type param0 param1 ... paramN defaultValue;
+     *
+     * Valid property types are:
+     *
+     *     - int
+     *     - uint
+     *     - float
+     *     - int_range
+     *     - float_range
+     *     - select
      */
 
     var html = "";
@@ -78,6 +111,22 @@ function buildUI(params) {
             var propertyType = propertyParams[0];
 
             switch(propertyType) {
+            case "int":
+                html += buildTitle(propertyName, propertyParams[1], true);
+                html += buildInt(propertyName, propertyParams[1]);
+                break;
+
+            case "uint":
+                html += buildTitle(propertyName, propertyParams[1], true);
+                html += buildUint(propertyName, propertyParams[1]);
+                break;
+
+            case "float":
+                html += buildTitle(propertyName, propertyParams[1], true);
+                html += buildFloat(propertyName, propertyParams[1]);
+
+                break;
+
             case "int_range":
                 html += buildTitle(propertyName, propertyParams[3]);
                 html += buildRangeInt(propertyName, propertyParams[1], propertyParams[2], propertyParams[3]);
@@ -88,6 +137,11 @@ function buildUI(params) {
                 html += buildRangeFloat(propertyName, propertyParams[1], propertyParams[2], propertyParams[3]);
                 break;
 
+            case "select":
+                html += buildTitle(propertyName, propertyParams[1], true);
+                html += buildSelect(propertyName, propertyParams);
+                break;
+
             default:
                 break;
             }
@@ -96,5 +150,6 @@ function buildUI(params) {
         html += "</div>";
     }
 
-    $("#ui_noise").append(html);
+    $("#noise_properties").empty();
+    $("#noise_properties").append(html);
 }

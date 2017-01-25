@@ -52,7 +52,7 @@ function getSelectedAlgorithm() {
 function buildNoiseParamsList() {
     var params = "";
 
-    $(".noise_property_value").each(function() {
+    $("#noise_properties .noise_property_value").each(function() {
         var id   = $(this).attr('id');
         var temp = id.split("_");
         var name = temp[0];
@@ -114,6 +114,8 @@ function updateInput(id) {
         var newVal = obj.val();
         $("#" + id + "_value").text(newVal);
     }
+
+    console.log(id + " update with value '" + obj.val() + "'");
 }
 
 function toggleGenerateButton() {
@@ -155,15 +157,20 @@ function generateStart() {
     generateNoiseMultithreaded(gSurface, getSelectedAlgorithm(), noiseParams, 2, generateStop);
 }
 
+function triggerUIRebuild() {
+    buildUI(getUIParams(getSelectedAlgorithm()));
+    $("#noise_properties .ui_element").change(function(){ updateInput($(this).attr('id')); });
+}
+
 $(document).ready(function() {
 
     gSurface = new Surface();
 
     populateAlgorithmList();
-    buildUI(getUIParams(getSelectedAlgorithm()));
     updateDimensions();
+    triggerUIRebuild();
 
     $("#generate_button").click(function() { generateStart(); });
     $("#export_button").click(function() { triggerExport(); });
-    $("input").change(function(){ updateInput($(this).attr('id')); });
+    $("#noise_algorithms").change(function() { triggerUIRebuild(); });
 });

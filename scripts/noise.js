@@ -77,6 +77,231 @@ function interpolateCosine(from, to, frac) {
 }
 
 
+//------------------------------------------------------------------------------------------
+// Random 
+//------------------------------------------------------------------------------------------
+
+
+/**
+ * \class Random
+ * \brief Parent class of all PRNG implementations.
+ */
+class Random {
+    constructor() {
+        this.seed = 0;
+    }
+
+    setSeed(value) {
+        this.seed = value;
+    }
+
+    next() {
+        return 0;
+    }
+
+    next(min, max) {
+        var value = next();
+        return (value % (max - min)) + min;
+    }
+}
+
+Random.phi = 1.618033988749895;
+
+
+//------------------------------------------------------------------------------------------
+// PRNG - XorShift96
+//------------------------------------------------------------------------------------------
+
+
+/** 
+ * \class RandomXorShift96
+ *
+ * Implementation of the 96 periodicity variation of the XorShift PRNG.
+ *
+ * This is an adaptation of the C++ implementation found within Ocular Engine at:
+ *
+ *     https://github.com/ssell/OcularEngine/blob/master/OcularCore/include/Math/Random/XorShift.hpp
+ */
+class RandomXorShift96 extends Random {
+    constructor() {
+        super();
+
+        this.shiftY = 238979280;
+        this.shiftZ = 158852560;
+
+        this.x = 0;
+        this.y = 0;
+        this.z = 0;
+    }
+
+    setSeed(value) {
+        super.setSeed(value);
+
+        this.x = value;
+        this.y = this.x + this.shiftY;
+        this.z = this.y + this.shiftZ;
+    }
+
+    next() {
+        this.x ^= this.x << 16;
+        this.x ^= this.x >> 5;
+        this.x ^= this.x << 1;
+
+        var temp = this.x;
+
+        this.x = this.y;
+        this.y = this.z;
+        this.z = temp ^ this.x ^ this.y;
+
+        return this.z;
+    }
+}
+
+RandomXorShift96.type = "XorShift96";
+
+
+//------------------------------------------------------------------------------------------
+// PRNG - WELL512
+//------------------------------------------------------------------------------------------
+
+
+/**
+ * \class RandomWELL512
+ *
+ * Implementation of the 512 periodicity variation of the WELL (Well Equidistributed Long-Period Linear) PRNG algorithm.
+ *
+ * This is an adaptation of the C++ implementation found within Ocular Engine at:
+ *
+ *     https://github.com/ssell/OcularEngine/blob/master/OcularCore/include/Math/Random/WELL.hpp
+ * 
+ * That implementation was based on the original work found at:
+ *
+ *     http://www.iro.umontreal.ca/~panneton/well/WELL512a.c
+ */
+class RandomWELL512 extends Random {
+    constructor() {
+        super();
+        
+        this.type = "WELL512";
+
+        this.index = 0;
+        this.state = Array.apply(0, Array(16)).map(function() { });  // *sigh*
+        this.xor   = new RandomXorShift96;
+    }
+
+    setSeed(value) {
+        super.setSeed(value);
+
+        this.xor.setSeed(value);
+
+        for(var i = 0; i < 16; ++i) {
+            this.state[i] = this.xor.next();
+        }
+    }
+
+    next() {
+        var a = 0;
+        var b = 0;
+        var c = 0;
+        var d = 0;
+
+        a  = this.state[this.index];
+        c  = this.state[(this.index + 13) & 15];
+        b  = a ^ c ^ (a << 16) ^ (c << 15);
+        c  = this.state[(this.index + 9) & 15];
+        c ^= (c >> 11);
+        a  = this.state[this.index] = b ^ c;
+        d  = a ^ ((a << 5) & 3661901088);
+        this.index = (this.index + 15) & 15;
+        a  = this.state[this.index];
+        this.state[this.index] = a ^ b ^ d ^ (a << 2) ^ (b << 18) ^ (c << 28);
+
+        return this.state[this.index];
+    }
+}
+
+RandomWELL512.type = "WELL512";
+
+
+//------------------------------------------------------------------------------------------
+// PRNG - CMWC131104
+//------------------------------------------------------------------------------------------
+
+/**
+ * \class RandomCMWC131104
+ *
+ * Implementation of the 131104 periodicity variation of the CMWC (Complementary-Multiply-With-Carry) PRNG algorithm.
+ *
+ * This is an adaptation of the C++ implementation found within Ocular Engine at:
+ *
+ *     https://github.com/ssell/OcularEngine/blob/master/OcularCore/include/Math/Random/CMWC.hpp
+ */
+class RandomCMWC131104 extends Random {
+    constructor() {
+        super();
+
+        this.type   = "CMWC131104";
+        this.qarray = Array.apply(0, Array(RandomCMWC131104.qsize)).map(function() { });
+        this.c      = 362436;
+        this.i      = RandomCMWC131104.qsize - 1;
+    }
+
+    setSeed(value) {
+        super.setSeed(value);
+
+        this.qarray[0] = this.seed;
+        this.qarray[1] = this.seed + Random.phi;
+        this.qarray[2] = this.seed + Random.phi + Random.phi;
+
+        for(var i = 3; i < RandomCMWC131104.qsize; ++i) {
+            this.qarray[i] = this.qarray[i - 3] ^ this.qarray[i - 2] ^ Random.phi ^ i;
+        }
+    }
+
+    next() {
+        this.i = (this.i + 1) & 4095;
+
+        var temp = 18782 * this.qarray[this.i] + this.c;
+        this.c = temp >> 32;
+        this.qarray[this.i] = (4294967294 - temp) | 0;
+
+        return this.qarray[this.i];
+    }
+}
+
+RandomCMWC131104.type  = "CMWC131104";
+RandomCMWC131104.qsize = 4096;
+
+
+//------------------------------------------------------------------------------------------
+// Random - Factory
+//------------------------------------------------------------------------------------------
+
+
+function CreateRandom(type) {
+    var prng;
+
+    switch(type) {
+    case RandomXorShift96.type:
+        prng = new RandomXorShift96();
+        break;
+
+    case RandomWELL512.type:
+        prng = new RandomWELL512();
+        break;
+
+    case RandomCMWC131104.type:
+        prng = new RandomCMWC131104();
+        break;
+
+    default:
+        break;
+    }
+
+    return prng;
+}
+
+
 //-----------------------------------------------------------------------------------------
 // Noise
 //-----------------------------------------------------------------------------------------
@@ -95,14 +320,11 @@ class Noise {
         this.height = 0;           // Height of the active image data (in pixels)
         this.length = 0;           // Total length of the active image data (in bytes [4 bytes per pixel])
     }
+
     setParam(param, value) {
         var result = true;
 
         switch(param) {
-        case "seed":
-            this.seed = Number(value);
-            break;
-
         case "gray":
             this.gray = (value == "true");
             break;
@@ -132,6 +354,7 @@ class Noise {
     }
 
     setSeed(value) {
+        console.log("\tNoise Seed = " + value);
         this.seed = value;
     }
 
@@ -181,7 +404,34 @@ class NoiseRandom extends Noise {
         super();
 
         this.type = "Random";
-        this.prng = new RandomWELL512();
+        this.prng = CreateRandom(RandomXorShift96.type);
+    }
+
+    setParam(param, value) {
+        var result = super.setParam(param, value);
+
+        if(!result) {
+            switch(param) {
+            case "prng":
+                this.prng = CreateRandom(value);
+                break;
+
+            case "seed":
+                this.setSeed(Number(value));
+                break;
+
+            default:
+                result = true;
+                break;
+            }
+        }
+
+        return result;
+    }
+
+    static getParams() {
+        super.getParams();
+        return "prng:select " + RandomXorShift96.type + " " + RandomWELL512.type + " " + RandomCMWC131104.type + ";seed:uint 1337;";
     }
 
     setSeed(value) {
@@ -205,16 +455,14 @@ class NoiseRandom extends Noise {
 
         for(var x = startX; x < endX; ++x) {
             for(var y = startY; y < endY; ++y) {
-
-                var r = this.prng.next(0, 255);
-                var g = this.prng.next(0, 255);
-                var b = this.prng.next(0, 255);
-
-                this.setPixel(imageData, x, y, r, g, b, 255);
+                var color = this.prng.next(0, 255);
+                this.setPixel(imageData, x, y, color, color, color, 255);
             }
         }
     }
 }
+
+NoiseRandom.type = "Random";
 
 
 //-----------------------------------------------------------------------------------------
@@ -376,6 +624,7 @@ class NoisePerlin extends Noise {
     }
 }
 
+NoisePerlin.type = "Perlin";
 
 
 //-----------------------------------------------------------------------------------------
@@ -387,8 +636,12 @@ function createNoise(type) {
     var result = null;
 
     switch(type) {
-    case "Perlin":
+    case NoisePerlin.type:
         result = new NoisePerlin();
+        break;
+
+    case NoiseRandom.type:
+        result = new NoiseRandom();
         break;
 
     default:
@@ -402,13 +655,19 @@ function getUIParams(type) {
     var result = "";
 
     switch(type) {
-    case "Perlin":
+    case NoisePerlin.type:
         result = NoisePerlin.getParams();
+        break;
+
+    case NoiseRandom.type:
+        result = NoiseRandom.getParams();
         break;
 
     default:
         break; 
     }
+
+    console.log("'" + type + "': " + result);
 
     return result;
 }
