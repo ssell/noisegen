@@ -32,6 +32,7 @@ class Surface {
         this.canvas    = document.getElementById("surface");
         this.context   = this.canvas.getContext("2d");
         this.imageData = this.context.createImageData(this.width, this.height);
+        this.gray      = true;
     }
 
     clear(r, g, b) {

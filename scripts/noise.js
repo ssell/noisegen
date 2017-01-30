@@ -28,6 +28,7 @@
 // Math Utilities
 //-----------------------------------------------------------------------------------------
 
+
 /** 
  * Clamps the specified value to the minimum and maximum.
  */
@@ -119,9 +120,7 @@ class Random {
 
     next(min, max) {
         var value = this.nextUnbound();
-        var result = mod(value, (max - min)) + min;
-        //console.log("next = " + value + " | scaled = mod(" + value + ", (" + max + " - " + min + ")) + " + min + " = " + result);
-        return result;
+        return (mod(value, (max - min)) + min);
     }
 }
 

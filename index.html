@@ -8,6 +8,7 @@
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
     <script src="scripts/surface.js"></script>
+    <script src="scripts/ui_multirange.js"></script>
     <script src="scripts/ui_builder.js"></script>
     <script src="scripts/noise.js"></script>
     <script src="scripts/noise_progress.js"></script>
@@ -43,6 +44,20 @@
             <div id="ui_color" class="ui_category">
                 <div class="category_title">
                     Color Properties
+                </div>
+                <div id="ui_color_buttons">
+                    <div class="ui_holder">
+                        <button id="grayscale_button" class="color_button color_button_selected">Grayscale</button>
+                        <button id="color_button" class="color_button">Color</button>
+                    </div>
+                </div>
+                <div id="ui_color_grayscale">
+                    <div class="ui_holder">
+                        <div id="grayscale_multirange" class="multirange" data-rangecount="2"></div>
+                    </div>
+                </div>
+                <div id="ui_color_color" class="hidden">
+                    color
                 </div>
             </div>
             <div id="ui_noise" class="ui_category">

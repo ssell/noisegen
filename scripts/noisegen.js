@@ -114,18 +114,25 @@ function updateInput(id) {
         var newVal = obj.val();
         $("#" + id + "_value").text(newVal);
     }
-
-    console.log(id + " update with value '" + obj.val() + "'");
 }
 
+/**
+ *
+ */
 function toggleGenerateButton() {
     $("#generate_button").prop('disabled', function(i, v) { return !v; });
 }
 
+/**
+ *
+ */
 function enableExportButton() {
     $("#export_button").prop('disabled', '');
 }
 
+/**
+ *
+ */
 function generateStop() {
 
     NoiseProgressBar.stop();
@@ -136,6 +143,9 @@ function generateStop() {
     console.log("Noise '" + getSelectedAlgorithm() + "' (" + gSurface.width + " x " + gSurface.height + ") generated in " + NoiseProgressBar.elapsed() + "ms");
 }
 
+/**
+ *
+ */
 function triggerExport() {
     var a = $("<a>").attr("href", gSurface.getURL()).attr("download", "noise.png").appendTo("body");
 
@@ -157,14 +167,56 @@ function generateStart() {
     generateNoiseMultithreaded(gSurface, getSelectedAlgorithm(), noiseParams, 2, generateStop);
 }
 
+/**
+ *
+ */
 function triggerUIRebuild() {
     buildUI(getUIParams(getSelectedAlgorithm()));
     $("#noise_properties .ui_element").change(function(){ updateInput($(this).attr('id')); });
 }
 
+/**
+ *
+ */
+function enableColorModeGray() {
+    gSurface.gray = true;
+
+    $("#grayscale_button").addClass("color_button_selected");
+    $("#color_button").removeClass("color_button_selected");
+
+    $("#ui_color_grayscale").removeClass("hidden");
+    $("#ui_color_color").addClass("hidden");
+}
+
+/**
+ *
+ */
+function enableColorModeColor() {
+    gSurface.gray = false;
+
+    $("#color_button").addClass("color_button_selected");
+    $("#grayscale_button").removeClass("color_button_selected");
+
+    $("#ui_color_color").removeClass("hidden");
+    $("#ui_color_grayscale").addClass("hidden");
+}
+
+/**
+ *
+ */
+function toggleColorMode() {
+    if(gSurface.gray) {
+        enableColorModeColor();
+    } else {
+        enableColorModeGray();
+    }
+}
+
 $(document).ready(function() {
 
     gSurface = new Surface();
+
+    var multiranges = buildMultiRanges($("#control_panel"));
 
     populateAlgorithmList();
     updateDimensions();
@@ -173,4 +225,5 @@ $(document).ready(function() {
     $("#generate_button").click(function() { generateStart(); });
     $("#export_button").click(function() { triggerExport(); });
     $("#noise_algorithms").change(function() { triggerUIRebuild(); });
+    $(".color_button").click(function() { toggleColorMode(); });
 });

@@ -118,7 +118,44 @@ body
     cursor: pointer;
 }
 
+.color_button
+{
+    width: 35%;
+
+    background-color: #CCC;
+    border: 1px solid #333;
+    border-radius: 5px;
+}
+
+.color_button_selected
+{
+    background-color: #CCFFCC;
+}
+
+.color_button:hover
+{
+    background-color: #DDD;
+    cursor: pointer;
+}
+
+.color_button_selected:hover
+{
+    background-color: #DDFFDD;
+    cursor: pointer;
+}
+
 .noise_property_value
 {
     display: inline-block;
+}
+
+.hidden 
+{
+    display: none;
+}
+
+.multi_scaler 
+{
+    width: 90%;
+    height: 5px;
 }
