@@ -42,6 +42,24 @@ function int32(x) {
     return (x | 0);
 }
 
+function uint32(x) { 
+    return (x >>> 0);
+}
+
+/**
+ * True modulus. Javascript '%' is a remainder operation. Example:
+ *
+ *     -5 % 3
+ *
+ * Expected modulus result: 1
+ * Javascript 'modulus' result: -2
+ *
+ * See: http://stackoverflow.com/q/4467539
+ */
+function mod(n, m) {
+    return ((n % m) + m) % m;
+}
+
 /** 
  * Linearly interpolates from one value to another.
  *
@@ -95,13 +113,15 @@ class Random {
         this.seed = value;
     }
 
-    next() {
+    nextUnbound() {
         return 0;
     }
 
     next(min, max) {
-        var value = next();
-        return (value % (max - min)) + min;
+        var value = this.nextUnbound();
+        var result = mod(value, (max - min)) + min;
+        //console.log("next = " + value + " | scaled = mod(" + value + ", (" + max + " - " + min + ")) + " + min + " = " + result);
+        return result;
     }
 }
 
@@ -109,55 +129,93 @@ Random.phi = 1.618033988749895;
 
 
 //------------------------------------------------------------------------------------------
-// PRNG - XorShift96
+// PRNG - XorShift32
 //------------------------------------------------------------------------------------------
 
 
-/** 
- * \class RandomXorShift96
+/**
+ * \class RandomXorShift32
  *
- * Implementation of the 96 periodicity variation of the XorShift PRNG.
+ * Implementation of the 32 periodicity variation of the XorShift PRNG.
  *
- * This is an adaptation of the C++ implementation found within Ocular Engine at:
+ * Adapted from the algorithm described in:
  *
- *     https://github.com/ssell/OcularEngine/blob/master/OcularCore/include/Math/Random/XorShift.hpp
- */
-class RandomXorShift96 extends Random {
+ *     Marsaglia, George. "Xorshift RNGs." Journal of Statistical Software; Section 3 Application to Xorshift RNGs
+ */ 
+class RandomXorShift32 extends Random {
     constructor() {
         super();
 
-        this.shiftY = 238979280;
-        this.shiftZ = 158852560;
-
-        this.x = 0;
-        this.y = 0;
-        this.z = 0;
+        this.state = 0;
     }
 
     setSeed(value) {
-        super.setSeed(value);
-
-        this.x = value;
-        this.y = this.x + this.shiftY;
-        this.z = this.y + this.shiftZ;
+        super.setSeed(uint32(value));
+        this.state = this.seed;
     }
 
-    next() {
-        this.x ^= this.x << 16;
-        this.x ^= this.x >> 5;
-        this.x ^= this.x << 1;
+    nextUnbound() {
 
-        var temp = this.x;
+        var x = this.state;
 
-        this.x = this.y;
-        this.y = this.z;
-        this.z = temp ^ this.x ^ this.y;
+        x = uint32(x ^ uint32(x << 13));
+        x = uint32(x ^ uint32(x >> 17));
+        x = uint32(x ^ uint32(x << 5));
 
-        return this.z;
+        this.state = x;
+
+        return x;
     }
 }
 
-RandomXorShift96.type = "XorShift96";
+RandomXorShift32.type = "XorShift32";
+
+
+//------------------------------------------------------------------------------------------
+// PRNG - XorShift128
+//------------------------------------------------------------------------------------------
+
+
+/**
+ * \class RandomXorShift128
+ *
+ * Implementation of the 128 periodicity variation of the XorShift PRNG.
+ *
+ * Adapted from the algorithm described in:
+ *
+ *     Marsaglia, George. "Xorshift RNGs." Journal of Statistical Software; Section 4 Summary 
+ */ 
+class RandomXorShift128 extends Random {
+    constructor() {
+        super();
+
+        this.stateShift = [0, 239006280, 397831840, 88675123];
+        this.state = [0, 0, 0, 0];
+    }
+
+    setSeed(value) {
+        super.setSeed(uint32(value));
+
+        for(var i = 0; i < 4; ++i) { 
+            this.state[i] = uint32(this.seed + this.stateShift[i]);
+        }
+    }
+
+    nextUnbound() {
+
+        var temp = uint32(this.state[0] ^ uint32(this.state[0] << 11));
+
+        this.state[0] = this.state[1];
+        this.state[1] = this.state[2];
+        this.state[2] = this.state[3];
+
+        this.state[3] = uint32(this.state[3] ^ uint32(this.state[3] >> 19) ^ uint32(temp ^ uint32(temp >> 8)));
+
+        return this.state[3];
+    }
+}
+
+RandomXorShift128.type = "XorShift128";
 
 
 //------------------------------------------------------------------------------------------
@@ -181,40 +239,39 @@ RandomXorShift96.type = "XorShift96";
 class RandomWELL512 extends Random {
     constructor() {
         super();
-        
-        this.type = "WELL512";
 
         this.index = 0;
-        this.state = Array.apply(0, Array(16)).map(function() { });  // *sigh*
-        this.xor   = new RandomXorShift96;
+        this.state = Array.apply(0, Array(16)).map(function() { }); 
+        this.xor   = new RandomXorShift128();
     }
 
     setSeed(value) {
-        super.setSeed(value);
-
+        super.setSeed(uint32(value));
         this.xor.setSeed(value);
-
         for(var i = 0; i < 16; ++i) {
-            this.state[i] = this.xor.next();
+            this.state[i] = this.xor.nextUnbound();
         }
     }
 
-    next() {
+    nextUnbound() {
         var a = 0;
         var b = 0;
         var c = 0;
         var d = 0;
 
-        a  = this.state[this.index];
-        c  = this.state[(this.index + 13) & 15];
-        b  = a ^ c ^ (a << 16) ^ (c << 15);
-        c  = this.state[(this.index + 9) & 15];
-        c ^= (c >> 11);
-        a  = this.state[this.index] = b ^ c;
-        d  = a ^ ((a << 5) & 3661901088);
+        a = this.state[this.index];
+        c = this.state[(this.index + 13) & 15];
+        b = uint32(a ^ uint32(c ^ uint32(a << 16) ^ uint32(c << 15)));
+        c = this.state[(this.index + 9) & 15];
+        c = uint32(c ^ uint32(c >> 11));
+        a = this.state[this.index] = b ^ c;
+        d = uint32(a ^ uint32(uint32(a << 5) & 3661901088));
+
         this.index = (this.index + 15) & 15;
-        a  = this.state[this.index];
-        this.state[this.index] = a ^ b ^ d ^ (a << 2) ^ (b << 18) ^ (c << 28);
+
+        a = this.state[this.index];
+
+        this.state[this.index] = uint32(a ^ uint32(b ^ uint32(d ^ uint32(a << 2) ^ uint32(b << 18) ^ uint32(c << 28))));
 
         return this.state[this.index];
     }
@@ -240,7 +297,6 @@ class RandomCMWC131104 extends Random {
     constructor() {
         super();
 
-        this.type   = "CMWC131104";
         this.qarray = Array.apply(0, Array(RandomCMWC131104.qsize)).map(function() { });
         this.c      = 362436;
         this.i      = RandomCMWC131104.qsize - 1;
@@ -258,7 +314,7 @@ class RandomCMWC131104 extends Random {
         }
     }
 
-    next() {
+    nextUnbound() {
         this.i = (this.i + 1) & 4095;
 
         var temp = 18782 * this.qarray[this.i] + this.c;
@@ -282,8 +338,12 @@ function CreateRandom(type) {
     var prng;
 
     switch(type) {
-    case RandomXorShift96.type:
-        prng = new RandomXorShift96();
+    case RandomXorShift32.type:
+        prng = new RandomXorShift32();
+        break;
+
+    case RandomXorShift128.type:
+        prng = new RandomXorShift128();
         break;
 
     case RandomWELL512.type:
@@ -354,7 +414,6 @@ class Noise {
     }
 
     setSeed(value) {
-        console.log("\tNoise Seed = " + value);
         this.seed = value;
     }
 
@@ -366,7 +425,7 @@ class Noise {
         var pixIndex = index / 4;
 
         y = (pixIndex / this.width);
-        x = (pixIndex % this.width);
+        x = mod(pixIndex, this.width);
     }
 
     xyToIndex(x, y) {
@@ -404,7 +463,7 @@ class NoiseRandom extends Noise {
         super();
 
         this.type = "Random";
-        this.prng = CreateRandom(RandomXorShift96.type);
+        this.prng = CreateRandom(RandomXorShift32.type);
     }
 
     setParam(param, value) {
@@ -431,23 +490,12 @@ class NoiseRandom extends Noise {
 
     static getParams() {
         super.getParams();
-        return "prng:select " + RandomXorShift96.type + " " + RandomWELL512.type + " " + RandomCMWC131104.type + ";seed:uint 1337;";
+        return "prng:select " + RandomXorShift32.type + " " + RandomXorShift128.type + " " + RandomWELL512.type + " " + RandomCMWC131104.type + ";seed:uint 1337;";
     }
 
     setSeed(value) {
         super.setSeed(value);
         this.prng.setSeed(value);
-    }
-
-    generateGrayScale(imageData) {
-        super.generateGrayScale(imageData);
-        
-        for(var x = 0; x < this.width; ++x) {
-            for(var y = 0; y < this.height; ++y) {
-                var color = this.prng.next(0, 255);
-                this.setPixel(imageData, x, y, color, color, color, 255);
-            }
-        }
     }
 
     generate(imageData, startX, endX, startY, endY) {
