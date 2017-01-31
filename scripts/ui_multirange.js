@@ -221,8 +221,9 @@ class UIMultiRangeSegment {
  * \class UIMultiRange
  */
 class UIMultiRange {
-    constructor(id) {
+    constructor(id, updateCallback) {
         this.id       = id;
+        this.callback = updateCallback;
         this.obj      = $("#" + id);
         this.count    = 0;
         this.step     = 0;
@@ -318,6 +319,8 @@ class UIMultiRange {
 
         this.segments[left].update();
         this.segments[right].update();
+
+        this.callback(this);
     }
 
     /**
@@ -343,16 +346,71 @@ class UIMultiRange {
 // Helper Functions
 //------------------------------------------------------------------------------------------
 
-function buildMultiRanges(parent) {
+/**
+ * 
+ */
+function buildMultiRanges(parent, updateCallback) {
     var ranges = [];
     
     if(parent) {
         parent.find(".multirange").each(function() {
-            ranges.push(new UIMultiRange($(this).attr("id")));
+            ranges.push(new UIMultiRange($(this).attr("id"), updateCallback));
             ranges[ranges.length - 1].build();
         });
     }
 
     return ranges;
+}
+
+/**
+ * http://stackoverflow.com/a/5624139
+ */
+function hexToRgb(hex) {
+    var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16)
+    } : null;
+}
+
+/**
+ * http://stackoverflow.com/a/3752026
+ */
+function rgbToRgb(rgb) {
+    var rgb = rgb.replace(/^(rgb|rgba)\(/,'').replace(/\)$/,'').replace(/\s/g,'').split(',');
+    return rgb ? {
+        r: rgb[0],
+        g: rgb[1],
+        b: rgb[2]
+    } : null;
+}
+
+/**
+ * 
+ */
+function toPaletteDescriptor(multirange) {
+    var descriptor = [];
+
+    if(multirange) {
+        for(var i = 0; i < multirange.segments.length; ++i) {
+            var mode  = "solid";
+            var color = rgbToRgb(multirange.segments[i].obj.css("background-color"));
+
+            if(color) {
+                var start = 0;
+
+                if(i == 0) {
+                    start = 0;
+                } else {
+                    start = parseInt(multirange.thumbs[(i - 1)].value);
+                }
+
+                descriptor.push(start + "," + color.r + "," + color.g + "," + color.b + "," + mode);
+            }
+        }
+    }
+
+    return descriptor;
 }
 

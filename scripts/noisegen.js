@@ -212,11 +212,30 @@ function toggleColorMode() {
     }
 }
 
+var gTemp = null;
+
+/**
+ * 
+ */
+function onMultiRangeUpdate(multirange) {
+    gTemp = multirange;
+}
+
+/**
+ * 
+ */
+function applyColorProperties() {
+    var descriptor = toPaletteDescriptor(gTemp);
+
+    gSurface.setPalette(descriptor, true);
+    gSurface.applyPalette();
+}
+
 $(document).ready(function() {
 
     gSurface = new Surface();
 
-    var multiranges = buildMultiRanges($("#control_panel"));
+    var multiranges = buildMultiRanges($("#control_panel"), onMultiRangeUpdate);
 
     populateAlgorithmList();
     updateDimensions();
@@ -226,4 +245,5 @@ $(document).ready(function() {
     $("#export_button").click(function() { triggerExport(); });
     $("#noise_algorithms").change(function() { triggerUIRebuild(); });
     $(".color_button").click(function() { toggleColorMode(); });
+    $("#color_apply_button").click(function() { applyColorProperties(); });
 });

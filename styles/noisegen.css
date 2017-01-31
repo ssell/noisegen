@@ -118,24 +118,24 @@ body
     cursor: pointer;
 }
 
-.color_button
+.normal_button
 {
-    width: 35%;
+    width: 25%;
 
     background-color: #CCC;
     border: 1px solid #333;
     border-radius: 5px;
 }
 
-.color_button_selected
-{
-    background-color: #CCFFCC;
-}
-
-.color_button:hover
+.normal_button:hover
 {
     background-color: #DDD;
     cursor: pointer;
+}
+
+.color_button_selected
+{
+    background-color: #CCFFCC;
 }
 
 .color_button_selected:hover

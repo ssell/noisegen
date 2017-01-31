@@ -30,7 +30,7 @@
  */
 function generateNoiseMultithreaded(surface, noise, params, numWorkersSide, endCallback) {
 	
-	var image = surface.getImageData();
+	var image = surface.getRawImageData();
 
 	var widthStep  = image.width / numWorkersSide;
 	var heightStep = image.height / numWorkersSide;
