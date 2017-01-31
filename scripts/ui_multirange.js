@@ -45,7 +45,7 @@ class UIMultiRangeThumb {
      */
     recalculateValue() {
         var width    = parseInt(this.parentObj.css("width"));
-        var pos      = parseInt(this.obj.css("margin-left"));
+        var pos      = this.pos;
         var min      = this.parent.min;
         var max      = this.parent.max;
         var relValue = pos / width;
@@ -84,6 +84,7 @@ class UIMultiRangeThumb {
         relPos = relPos * parentWidth;
 
         this.obj.css("margin-left", relPos);
+        this.pos = relPos;
     }
 
     /**
@@ -92,18 +93,29 @@ class UIMultiRangeThumb {
     static onMouseMove(event, thumb) {
         if(thumb.selected) {
 
-            var mouseX = event.pageX;
-            var offset = mouseX - thumb.prevX;
+            const mouseX = event.pageX;
+            const offset = mouseX - thumb.prevX;
 
-            var width  = parseInt(thumb.parentObj.css("width"));
-            var relPos = parseInt(thumb.obj.css("margin-left"));
+            const width  = parseInt(thumb.parentObj.css("width"));
+            const curPos = parseInt(thumb.obj.css("margin-left"));
+            const relPos = Math.min(Math.max((curPos + offset), 0), width);
 
-            relPos = relPos + offset;
-            relPos = Math.min(Math.max(relPos, 0), width);
+            if(curPos != relPos) {
+                var posLeft  = thumb.parent.getThumbPos(thumb.index - 1);
+                var posRight = thumb.parent.getThumbPos(thumb.index + 1);
 
-            thumb.obj.css("margin-left", relPos);
-            thumb.prevX = event.pageX;
-            thumb.recalculateValue();
+                if(posLeft == 0) {
+                    posLeft = -1;
+                }
+
+                if((relPos > posLeft) && (relPos < posRight)) {
+                    thumb.obj.css("margin-left", relPos);
+                    thumb.pos = relPos;
+                    thumb.prevX = event.pageX;
+                    thumb.recalculateValue();
+                    thumb.parent.onThumbUpdate(thumb);
+                }
+            }
         } else {
             thumb.obj.unbind("mousemove");
         }
@@ -146,6 +158,60 @@ class UIMultiRangeThumb {
     }
 }
 
+
+//------------------------------------------------------------------------------------------
+// UIMultiRangeSegment
+//------------------------------------------------------------------------------------------
+
+
+/**
+ * 
+ */
+class UIMultiRangeSegment {
+    constructor(parent, index, color) {
+        this.parent    = parent;
+        this.index     = index;
+        this.color     = color;
+        this.parentObj = parent.backgroundObj;
+        this.obj       = null;
+        this.pos       = 0;
+        this.width     = 0;
+    }
+
+    /**
+     * 
+     */
+    calculatePosWidth() {
+        var startPos = this.parent.getThumbPos(this.index - 1);
+        var stopPos = this.parent.getThumbPos(this.index);
+
+        this.pos = startPos;
+        this.width = (stopPos - startPos);
+    }
+
+    /**
+     * 
+     */
+    update() {
+        this.calculatePosWidth();
+
+        this.obj.css("background-color", this.color);
+        this.obj.css("margin-left", this.pos);
+        this.obj.css("width", this.width);
+    }
+
+    /**
+     * 
+     */
+    build() {
+        this.parentObj.append("<div class='multirange_segment' />");
+        this.obj = this.parentObj.find(".multirange_segment").last();
+
+        this.update();
+    }
+}
+
+
 //------------------------------------------------------------------------------------------
 // UIMultiRange
 //------------------------------------------------------------------------------------------
@@ -156,21 +222,28 @@ class UIMultiRangeThumb {
  */
 class UIMultiRange {
     constructor(id) {
-        this.id     = id;
-        this.obj    = $("#" + id);
-        this.count  = 0;
-        this.step   = 0;
-        this.min    = 0;
-        this.max    = 0;
-        this.values = null;
-        this.thumbs = null;
+        this.id       = id;
+        this.obj      = $("#" + id);
+        this.count    = 0;
+        this.step     = 0;
+        this.min      = 0;
+        this.max      = 0;
+        this.values   = null;
+        this.thumbs   = null;
+        this.segments = null;
     }
 
+    /**
+     * 
+     */
     buildBackground() {
         this.obj.append("<div class='multirange_background'></div>");
         this.backgroundObj = this.obj.find(".multirange_background").last();
     }
 
+    /**
+     * 
+     */
     buildThumbs() {
         var valuesStr = this.obj.data("rangevalues");
         var valuesSplit = [];
@@ -189,21 +262,79 @@ class UIMultiRange {
             this.thumbs[i].build();
         }
     }
+
+    /**
+     * 
+     */
+    buildSegments() {
+        var colorsStr = this.obj.data("rangecolors");
+        var colorsSplit = [];
+
+        if(colorsStr) {
+            console.log("rangecolor = '" + colorsStr + "'");
+            colorsSplit = colorsStr.split(",");
+        }
+
+        for(var i = 0; i < (this.count + 1); ++i) {
+            if(i < colorsSplit.length) {
+                this.segments[i] = new UIMultiRangeSegment(this, i, colorsSplit[i]);
+            } else {
+                this.segments[i] = new UIMultiRangeSegment(this, i, "#000000");
+            }
+
+            this.segments[i].build();
+        }
+    }
     
+    /**
+     * 
+     */
     build() {
         if(this.obj) {
             this.obj.empty();
 
-            this.count  = Number(this.obj.data("rangecount"));
-            this.step   = Number(this.obj.data("rangestep"));
-            this.min    = Number(this.obj.data("rangemin"));
-            this.max    = Number(this.obj.data("rangemax"));
-            this.values = Array.apply(0, Array(this.count)).map(function() { }); 
-            this.thumbs = Array.apply(0, Array(this.count)).map(function() { }); 
+            this.count    = Number(this.obj.data("rangecount"));
+            this.step     = Number(this.obj.data("rangestep"));
+            this.min      = Number(this.obj.data("rangemin"));
+            this.max      = Number(this.obj.data("rangemax"));
+            this.values   = Array.apply(0, Array(this.count)).map(function() { }); 
+            this.thumbs   = Array.apply(0, Array(this.count)).map(function() { }); 
+            this.segments = Array.apply(0, Array(this.count + 1)).map(function() { });
 
             this.buildBackground();
             this.buildThumbs();
+            this.buildSegments();
         }
+    }
+
+    /**
+     * 
+     */
+    onThumbUpdate(thumb) {
+        var index = thumb.index;
+
+        var left  = index;
+        var right = index + 1;
+
+        this.segments[left].update();
+        this.segments[right].update();
+    }
+
+    /**
+     * 
+     */
+    getThumbPos(index) {
+        var result = 0;
+
+        if(index < 0) {
+            result = 0;
+        } else if(index < this.thumbs.length) {
+            result = this.thumbs[index].pos;
+        } else {
+            result = parseInt(this.backgroundObj.css("width"));
+        }
+
+        return result;
     }
 }
 

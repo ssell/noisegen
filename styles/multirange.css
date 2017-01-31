@@ -18,14 +18,24 @@
     position: absolute;
     
     background-color: #FFF;
-
+    border: 1px solid #333;
+    
     width: 3px;
-    height: 14px;
+    height: 16px;
 
     cursor: pointer;
+
+    z-index: 1;
 }
 
 .multirange_thumb_selected
 {
     background-color: #CCFFCC;
+}
+
+.multirange_segment 
+{
+    position: absolute;
+
+    height: 10px;
 }
