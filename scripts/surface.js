@@ -135,6 +135,8 @@ class Surface {
         this.canvas        = document.getElementById("surface");
         this.context       = this.canvas.getContext("2d");
         this.rawImageData  = this.context.createImageData(this.width, this.height);
+        this.rawMaxValue   = 0.0;
+        this.rawMinValue   = 1.0;
         this.gray          = true;
         this.grayPalette   = new Palette();
         this.colorPalette  = new Palette();
@@ -163,12 +165,37 @@ class Surface {
         return this.rawImageData;
     }
 
+    normalizeRawImage() {
+        this.rawMaxValue = 0.0;
+        this.rawMinValue = 1.0;
+
+        var dataPos = this.rawImageData.length;
+
+        while(dataPos--) {
+            if(this.rawImageData[dataPos] < this.rawMinValue) {
+                this.rawMinValue = this.rawImageData[dataPos];
+            }
+            if(this.rawImageData[dataPos] > this.rawMaxValue) {
+                this.rawMaxValue = this.rawImageData[dataPos];
+            }
+        }
+
+        const dataRange = (this.rawMaxValue - this.rawMinValue);
+        const dataRangeReciprocal = 1.0 / dataRange;
+
+        dataPos = this.rawImageData.length;
+
+        while(dataPos--) {
+            this.rawImageData[dataPos] = (this.rawImageData[dataPos] - this.rawMinValue) * dataRangeReciprocal;
+        }
+    }
+
     drawImage(data) {
         this.context.putImageData(data, 0, 0);
         this.rawImageData = this.context.getImageData(0, 0, this.width, this.height);
     }
 
-    drawImage(data, startX, endX, startY, endY) {
+    drawImageRect(data, startX, endX, startY, endY) {
         this.context.putImageData(data, 0, 0, startX, startY, (endX - startX), (endY - startY));
         this.rawImageData = this.context.getImageData(0, 0, this.width, this.height);
     }

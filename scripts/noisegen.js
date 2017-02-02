@@ -47,6 +47,13 @@ function getSelectedAlgorithm() {
 }
 
 /**
+ * 
+ */
+function getNormalized() {
+    return $("#noise_normalized").is(':checked');
+}
+
+/**
  * Builds the noise properties parameters list used in image generation.
  */
 function buildNoiseParamsList() {
@@ -164,7 +171,7 @@ function generateStart() {
     var noiseParams = buildNoiseParamsList();
 
     updateDimensions();
-    generateNoiseMultithreaded(gSurface, getSelectedAlgorithm(), noiseParams, 2, generateStop);
+    generateNoiseMultithreaded(gSurface, getSelectedAlgorithm(), getNormalized(), noiseParams, 2, generateStop);
 }
 
 /**

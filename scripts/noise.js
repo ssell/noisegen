@@ -380,6 +380,13 @@ class Noise {
         this.length = 0;           // Total length of the active image data (in bytes [4 bytes per pixel])
     }
 
+    /**
+     * Sets an individual parameter value.
+     * Implementations are expected to override with custom parameter handling.
+     * 
+     * \param[in] param Parameter name string.
+     * \param[in] value Parameter value string.
+     */
     setParam(param, value) {
         var result = true;
 
@@ -396,43 +403,96 @@ class Noise {
         return result;
     }
 
+    /**
+     * Sets a list of parameters for the noise implementation.
+     * The parameters string is expected in the following format:
+     * 
+     *     param0name:param0value;param1name:param1value;...;paramNname:paramNvalue
+     * 
+     * Each parameter is then set with a call to setParam which should
+     * be overriden by the child implementation.
+     */
     setParams(params) {
-        var paramsSplit = params.split(";");
+        var paramsSplit   = params.split(";");
+        var paramSegments = [];
+        var paramName     = "";
+        var paramVal      = 0;
 
         for(var i = 0; i < paramsSplit.length; ++i) {
-            var paramSegments = paramsSplit[i].split(":");
-            var paramName = paramSegments[0];
-            var paramVal = paramSegments[1];
+            paramSegments = paramsSplit[i].split(":");
+            paramName = paramSegments[0];
+            paramVal = paramSegments[1];
 
             this.setParam(paramName, paramVal);
         }
     }
 
+    /**
+     * Returns a formatted list of parameters that the noise algorithm expects.
+     * The list is typically formatted as:
+     * 
+     *     param0name:paramType ...;param1name:paramType ...;
+     * 
+     * See `ui_builder.js` for valid parameter types and formatting.
+     */
     static getParams() {
         return "";
     }
 
+    /**
+     * Sets the seed of the noise implementation.
+     */
     setSeed(value) {
         this.seed = value;
     }
 
-    length() {
-        this.length = (this.width * this.height * 4);
-    }
-
+    /**
+     * Converts the index to an x/y position. 
+     * Assumes usage in conjunction with a standard ImageData data array.
+     */
     indexToXY(index, x, y) {
-        var pixIndex = index / 4;
+        const pixIndex = index / 4;
 
         y = (pixIndex / this.width);
         x = mod(pixIndex, this.width);
     }
 
+    /**
+     * Converts the x/y position to an index.
+     * Assumes usage in conjunction with a standard ImageData data array.
+     */
     xyToIndex(x, y) {
         return (((y * this.width) + x) * 4);
     }
 
+    /**
+     * Expected to return the raw value for the given x/y position.
+     * Most noise algorithms generate on the range (-1.0, 1.0) but this may return any value.
+     */
+    getPixelRaw(x, y) {
+        return 0;
+    }
+
+    /**
+     * Expected to return the final pixel value on range [0, 255] for the given x/y position.
+     */
+    getPixel(x, y) {
+        return 0;
+    }
+
+    /**
+     * Sets the pixel value in the ImageData data array.
+     * 
+     * \param[in] imageData ImageData object.
+     * \param[in] x         X-position in the 2D image.
+     * \param[in] y         Y-position in the 2D image.
+     * \param[in] r         R-channel value of the pixel. On range [0, 255].
+     * \param[in] g         G-channel value of the pixel. On range [0, 255].
+     * \param[in] b         B-channel value of the pixel. On range [0, 255].
+     * \param[in] a         A-channel value of the pixel. On range [0, 255].
+     */
     setPixel(imageData, x, y, r, g, b, a) {
-        var index = this.xyToIndex(x, y);
+        const index = this.xyToIndex(x, y);
 
         imageData.data[index + 0] = r;
         imageData.data[index + 1] = g;
@@ -440,10 +500,69 @@ class Noise {
         imageData.data[index + 3] = a;
     }
 
+    /**
+     * Sets the pixel value in the ImageData data array where (r = g = b).
+     * 
+     * \param[in] imageData ImageData object.
+     * \param[in] x         X-position in the 2D image.
+     * \param[in] y         Y-position in the 2D image.
+     * \param[in] color     Color value of the pixel. On range [0, 255].
+     */
+    setPixelUniform(imageData, x, y, color) {
+        const index = this.xyToIndex(x, y);
+
+        imageData.data[index + 0] = color;
+        imageData.data[index + 1] = color;
+        imageData.data[index + 2] = color;
+        imageData.data[index + 3] = 255;
+    }
+
+    /**
+     * 
+     */
+    setRaw(rawData, x, y, value) {
+        const index = (y * this.width) + x;
+        rawData[index] = value;
+    }
+
+    /**
+     * Fills the provided ImageData data array with pixels generated from the noise implementation.
+     * 
+     * \param[in] imageData ImageData object. 
+     * \param[in] startX    Starting x-position in the 2D image.
+     * \param[in] endX      Ending x-position in the 2D image.
+     * \param[in] startY    Starting y-position in the 2D image.
+     * \param[in] endY      Ending y-position in the 2D image.
+     */
     generate(imageData, startX, endX, startY, endY) {
-        this.width  = imageData.width;
-        this.height = imageData.height;
-        this.length = (this.width * this.height * 4);
+        
+        const progressStep = (endY - startY);
+        
+        for(var x = startX; x < endX; ++x) {
+            for(var y = startY; y < endY; ++y) {
+                const color = this.getPixel(x, y);
+                this.setPixelUniform(imageData, x, y, color);
+            }
+
+            postMessage({ progress: progressStep });
+        }
+    }
+
+    /**
+     * 
+     */
+    generateRaw(rawData, startX, endX, startY, endY) {
+        
+        const progressStep = (endY - startY);
+
+        for(var x = startX; x < endX; ++x) {
+            for(var y = startY; y < endY; ++y) {
+                const raw = this.getPixelRaw(x, y);
+                this.setRaw(rawData, x, y, raw);
+            }
+
+            postMessage({ progress: progressStep });
+        }
     }
 }
 
@@ -497,15 +616,14 @@ class NoiseRandom extends Noise {
         this.prng.setSeed(value);
     }
 
-    generate(imageData, startX, endX, startY, endY) {
-        super.generate(imageData, startX, startY, endY);
+    getPixelRaw(x, y) {
+        super.getPixelRaw();
+        return this.prng.next(0, 255);
+    }
 
-        for(var x = startX; x < endX; ++x) {
-            for(var y = startY; y < endY; ++y) {
-                var color = this.prng.next(0, 255);
-                this.setPixel(imageData, x, y, color, color, color, 255);
-            }
-        }
+    getPixel(x, y) {
+        super.getPixel();
+        return this.getPixelRaw(x, y);
     }
 }
 
@@ -654,20 +772,14 @@ class NoisePerlin extends Noise {
         return (result / maxAmplitude);
     }
 
-    generate(imageData, startX, endX, startY, endY) {
-        super.generate(imageData, startX, startY, endY);
+    getPixelRaw(x, y) {
+        super.getPixelRaw(x, y);
+        return (this.getValue(x + this.seed, y + this.seed));
+    }
 
-        const progressStep = (endY - startY);
-
-        for(var x = startX; x < endX; ++x) {
-            for(var y = startY; y < endY; ++y) {
-                // Perlin noise generates values on the range of [-1.0, 1.0] but for our pixels we require a color on the range [0, 255]
-                var color = ((this.getValue(x + this.seed, y + this.seed) + 1.0) * 0.5) * 255;
-                this.setPixel(imageData, x, y, color, color, color, 255);
-            }
-            
-            postMessage({ progress: progressStep });
-        }
+    getPixel(x, y) {
+        super.getPixel(x, y);
+        return ((this.getPixelRaw(x, y) + 1.0) * 0.5) * 255; // Perlin noise generates values on the range of [-1.0, 1.0] but for our pixels we require a color on the range [0, 255]
     }
 }
 
@@ -714,8 +826,6 @@ function getUIParams(type) {
         break; 
     }
 
-    console.log("'" + type + "': " + result);
-
     return result;
 }
 
@@ -728,17 +838,31 @@ self.onmessage = function(e) {
     var data = e.data;
 
     if(data) {
-        var image  = data.image;
+        var isRaw  = data.isRaw;
         var noise  = createNoise(data.noise);
         var params = data.noiseParams;
+        var width  = data.width;
+        var height = data.height;
         var startX = data.startX;
         var endX   = data.endX;
         var startY = data.startY;
         var endY   = data.endY;
 
         noise.setParams(params);
-        noise.generate(image, startX, endX, startY, endY);
+        noise.width  = width;
+        noise.height = height;
+        noise.length = (width * height);
 
-        postMessage({ image: data.image, startX: startX, endX: endX, startY: startY, endY: endY});
+        if(isRaw) {
+             var rawData = data.rawData;
+
+             noise.generateRaw(rawData, startX, endX, startY, endY);
+             postMessage({ rawData: rawData, startX: startX, endX: endX, startY: startY, endY: endY});
+        } else {
+            var image = data.image;
+
+            noise.generate(image, startX, endX, startY, endY);
+            postMessage({ image: data.image, startX: startX, endX: endX, startY: startY, endY: endY});
+        }
     }
 }
