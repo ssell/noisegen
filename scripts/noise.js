@@ -608,7 +608,7 @@ class NoiseRandom extends Noise {
 
     static getParams() {
         super.getParams();
-        return "prng:select " + RandomXorShift32.type + " " + RandomXorShift128.type + " " + RandomWELL512.type + " " + RandomCMWC131104.type + ";seed:uint 1337;";
+        return "prng:select " + RandomXorShift32.type + " " + RandomXorShift128.type + " " + RandomWELL512.type + " " + RandomCMWC131104.type + ";seed:number 1337;";
     }
 
     setSeed(value) {
