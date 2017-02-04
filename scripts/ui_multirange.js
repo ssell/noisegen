@@ -64,8 +64,6 @@ class UIMultiRangeThumb {
         if(parentHeight && defaultHeight) {
             var yPos = (defaultHeight - parentHeight) * 0.5;
             this.obj.css("margin-top", -yPos);
-
-            console.log("ph = " + parentHeight + " | dh = " + defaultHeight + " | yP = " + yPos);
         }
     }
 
@@ -168,10 +166,11 @@ class UIMultiRangeThumb {
  * 
  */
 class UIMultiRangeSegment {
-    constructor(parent, index, color) {
+    constructor(parent, index, color, type) {
         this.parent    = parent;
         this.index     = index;
         this.color     = color;
+        this.type      = type;
         this.parentObj = parent.backgroundObj;
         this.obj       = null;
         this.pos       = 0;
@@ -268,21 +267,37 @@ class UIMultiRange {
      * 
      */
     buildSegments() {
-        var colorsStr = this.obj.data("rangecolors");
+        const colorsStr = this.obj.data("rangecolors");
         var colorsSplit = [];
 
         if(colorsStr) {
-            console.log("rangecolor = '" + colorsStr + "'");
             colorsSplit = colorsStr.split(",");
         }
 
+        const typesStr = this.obj.data("rangetypes");
+        var typesSplit = [];
+
+        if(typesStr) {
+            typesSplit = typesStr.split(",");
+        }
+
+        var color = "";
+        var type = "";
+
         for(var i = 0; i < (this.count + 1); ++i) {
             if(i < colorsSplit.length) {
-                this.segments[i] = new UIMultiRangeSegment(this, i, colorsSplit[i]);
+                color = colorsSplit[i];
             } else {
-                this.segments[i] = new UIMultiRangeSegment(this, i, "#000000");
+                color = "#000000";
             }
 
+            if(i < typesSplit.length) {
+                type = typesSplit[i];
+            } else {
+                type = "none";
+            }
+
+            this.segments[i] = new UIMultiRangeSegment(this, i, color, type);
             this.segments[i].build();
         }
     }
@@ -394,7 +409,7 @@ function toPaletteDescriptor(multirange) {
 
     if(multirange) {
         for(var i = 0; i < multirange.segments.length; ++i) {
-            var mode  = "solid";
+            var mode  = multirange.segments[i].type;
             var color = rgbToRgb(multirange.segments[i].obj.css("background-color"));
 
             if(color) {

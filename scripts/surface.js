@@ -39,7 +39,7 @@ class PaletteSegment {
     }
 
     toStr() {
-        return "start = " + this.start + " | (" + this.r + "," + this.g + ", " + this.b + ")";
+        return "mode = " + this.mode + " | start = " + this.start + " | (" + this.r + "," + this.g + ", " + this.b + ")";
     }
 }
 
@@ -80,6 +80,10 @@ class Palette {
         this.segments.sort(function(a, b) {
             return (a.start - b.start);
         })
+
+        for(var i = 0; i < this.segments.length; ++i) {
+            console.log(this.segments[i].toStr());
+        }
     }
 
     /**
@@ -106,15 +110,28 @@ class Palette {
         var segmentIndex = this.findSegment(value);
         var result = null;
 
-        if(segmentIndex < this.segments.length) {
-            var r = this.segments[segmentIndex].r;
-            var g = this.segments[segmentIndex].g;
-            var b = this.segments[segmentIndex].b;
+        var r = value;
+        var g = value;
+        var b = value;
 
-            result = {r: r, g: g, b: b};
+        if(segmentIndex < this.segments.length) {
+            switch(this.segments[segmentIndex].mode) {
+            case "solid":
+                r = this.segments[segmentIndex].r;
+                g = this.segments[segmentIndex].g;
+                b = this.segments[segmentIndex].b;
+                break;
+
+            case "smooth":
+                break;
+
+            case "none":
+            default:
+                break;
+            }
         }
 
-        return result;
+        return {r: r, g: g, b: b};
     }
 }
 
