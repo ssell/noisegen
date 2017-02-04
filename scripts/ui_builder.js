@@ -98,9 +98,13 @@ function buildRangeInt(id, minVal, maxVal, defaultVal) {
     }
 
     return "<div class='ui_holder'>" +
-                minVal +
-                "<input class='ui_element' id='" + id + "' type='range' min='" + Math.trunc(minVal) + "' max='" + Math.trunc(maxVal) + "' value='" + Math.trunc(defaultVal) + "' step='" + step + "'>" + 
-                maxVal +
+                "<table class='ui_table'>" +
+                    "<tr>" +
+                        "<td width='15%' style='text-align: right;'>" + minVal + "</td>" +
+                        "<td width='60%'><input class='ui_element ui_range' id='" + id + "' type='range' min='" + minVal + "' max='" + maxVal + "' value='" + defaultVal + "' step='" + step + "'></td>" + 
+                        "<td width='15%' style='text-align: left;'>" + maxVal + "</td>" +
+                    "</tr>" +
+                "</table>" +
             "</div>";
 }
 
@@ -125,9 +129,13 @@ function buildRangeFloat(id, minVal, maxVal, defaultVal) {
     var step = (Number(maxVal) - Number(minVal)) * 0.01;
 
     return "<div class='ui_holder'>" +
-                minVal +
-                "<input class='ui_element' id='" + id + "' type='range' min='" + minVal + "' max='" + maxVal + "' value='" + defaultVal + "' step='" + step + "'>" + 
-                maxVal +
+                "<table class='ui_table'>" +
+                    "<tr>" +
+                        "<td width='15%' style='text-align: right;'>" + minVal + "</td>" +
+                        "<td width='60%'><input class='ui_element ui_range' id='" + id + "' type='range' min='" + minVal + "' max='" + maxVal + "' value='" + defaultVal + "' step='" + step + "'></td>" + 
+                        "<td width='15%' style='text-align: left;'>" + maxVal + "</td>" +
+                    "</tr>" +
+                "</table>" +
             "</div>";
 }
 

@@ -51,6 +51,8 @@ label
     z-index: 1;
 
     width: 350px;
+
+    overflow: auto;
 }
 
 #progress_bar
@@ -117,7 +119,6 @@ label
 
     vertical-align: bottom;
     position: relative;
-
 }
 
 .big_button
@@ -177,4 +178,80 @@ label
 {
     width: 90%;
     height: 5px;
+}
+
+.ui_table
+{
+    table-layout: fixed;
+    width: 100%;
+}
+
+input[type="range"]
+{
+    display: inline-block;
+
+    width: 90%;
+
+    -webkit-appearance: none;
+    -moz-apperance: none;
+
+    background-color: #CCCCCC;
+    height: 10px;
+
+    border: 0px solid black;
+}
+
+input[type=range]:focus 
+{
+  outline: none;
+}
+
+input[type='range']::-webkit-slider-thumb 
+{
+    -webkit-appearance: none !important;
+
+    background-color: #FFFFFF;
+    border: 1px solid #333333;
+
+    height: 16px;
+    width: 5px;
+
+    cursor: pointer;
+}
+
+input[type=range]::-moz-range-thumb
+{
+    -webkit-appearance: none !important;
+
+    background-color: #FFFFFF;
+    border: 1px solid #333333;
+    border-radius: 1px;
+
+    height: 16px;
+    width: 3px;
+
+    cursor: pointer;
+}
+
+input[type=range]::-ms-thumb
+{
+    -webkit-appearance: none !important;
+
+    background-color: #FFFFFF;
+    border: 1px solid #333333;
+
+    height: 16px;
+    width: 5px;
+
+    cursor: pointer;
+}
+
+input[type=range]::-moz-range-track 
+{
+    background-color: #CCCCCC;
+}
+
+td 
+{ 
+    word-wrap: break-word; 
 }
