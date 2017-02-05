@@ -15,6 +15,23 @@ label
     text-indent: -15px;
 }
 
+.noise_property_value
+{
+    position: absolute;
+
+    margin-left: 5px;
+
+    background-color: transparent;
+
+    color: #AAA;
+    font-family: 'Lato', sans-serif;
+    font-size: 14px;
+
+    border: 0;
+
+    width: 50px;
+}
+
 #contents
 {
     position: absolute;
@@ -259,4 +276,19 @@ input[type=range]::-moz-range-track
 td 
 { 
     word-wrap: break-word; 
+}
+
+/* Remove the up/down arrows from the 'number' input fields */
+
+input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button 
+{ 
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    margin: 0; 
+}
+
+input[type=number] 
+{
+    -moz-appearance:textfield;
 }

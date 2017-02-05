@@ -65,7 +65,7 @@ function buildNoiseParamsList() {
         var id   = $(this).attr('id');
         var temp = id.split("_");
         var name = temp[0];
-        var value = $(this).text();
+        var value = $(this).val();
 
         params += name + ":" + value + ";";
     });
@@ -121,7 +121,7 @@ function updateInput(id) {
 
     if(obj) {
         var newVal = obj.val();
-        $("#" + id + "_value").text(newVal);
+        $("#" + id + "_value").val(newVal);
     }
 }
 

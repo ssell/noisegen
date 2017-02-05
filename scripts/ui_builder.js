@@ -52,8 +52,18 @@ function toTitleCase(str)
  * \param[in] value       Default value of the input below the title.
  * \param[in] valueHidden If true, the value of the input will not be displayed next to the title.
  */
+
+
 function buildTitle(title, value, valuehidden) {
-    return "<div class='ui_holder ui_title'>" + toTitleCase(title) + ": <div id='" + title + "_value' class='noise_property_value' " + (valuehidden ? "style='display:none;'" : "") + ">" + value + "</div></div>";
+    var html = "<div class='ui_holder ui_title'>" + toTitleCase(title) + ": ";
+
+    if(valuehidden) {
+        html += "<div id='" + title + "_value' class='noise_property_value' style='display:none;'>" + value + "</div></div>";
+    } else {
+        html += "<input id='" + title + "_value' class='noise_property_value' type='number' value='" + value + "'></div>";
+    }
+    
+    return html;
 }
 
 /**
