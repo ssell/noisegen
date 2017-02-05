@@ -163,6 +163,13 @@ class UIMultiRangeThumb {
 
         this.obj.mousedown(function(event){ UIMultiRangeThumb.onMouseDown(event, thumb); });
     }
+
+    /**
+     * 
+     */
+    destroy() {
+        this.obj.remove();
+    }
 }
 
 
@@ -207,6 +214,11 @@ class UIMultiRangeSegmentEditor {
         $("#multirange_segment_editor_split").click(function(e) {
             self.parent.splitSegment(self.segment);
         });
+
+        $("#multirange_segment_editor_remove").click(function(e) {
+            self.parent.removeSegment(self.segment);
+            self.obj.remove();
+        })
     }
 
     /**
@@ -236,10 +248,10 @@ class UIMultiRangeSegmentEditor {
                     "<hr>" + 
                     "<div class='multirange_button_holder'>" + 
                         "<button type='button' id='multirange_segment_editor_split' class='multirange_button' " + (this.segment.width < 12 ? "disabled" : "") + ">Split</button>" + 
-                        "<button type='button' id='multirange_segment_editor_remove' class='multirange_button'>Remove</button>" +
+                        "<button type='button' id='multirange_segment_editor_remove' class='multirange_button' " + (this.parent.segments.length <= 1 ? "disabled" : "") + ">Remove</button>" +
                     "</div>" +
                 "</div>";
-
+                
             this.parentObj.append(html);
             this.obj = this.parentObj.find(".multirange_segment_editor").last();
 
@@ -330,6 +342,13 @@ class UIMultiRangeSegment {
 
         this.update();
         this.bindActions();
+    }
+    
+    /**
+     * 
+     */
+    destroy() {
+        this.obj.remove();
     }
 }
 
@@ -505,65 +524,148 @@ class UIMultiRange {
      * 
      */
     splitSegment(segment) {
-        console.log("split segment '" + segment.mode + "'");
         if(segment) {
+            const segmentIndex = segment.index;
+
+            if(this.segments.length == 1) {
+                // Splitting the only segment, which means there are no thumbs currently.
+                const thumbValue = (this.max - this.min) * 0.5;
+                this.thumbs.push(new UIMultiRangeThumb(this, 0, thumbValue));
+                this.thumbs[0].build();
+
+                this.segments.push(new UIMultiRangeSegment(this, 1, segment.editable, segment.color, segment.mode));
+                this.segments[(this.segments.length - 1)].build();
+                this.segments[segmentIndex].update();
+
+            } else {
+                const leftThumbIndex  = segmentIndex - 1;
+                const rightThumbIndex = segmentIndex;
+
+                if(leftThumbIndex < 0) {
+                    // Add new thumb and segment at the start
+                    const rightThumbValue = this.thumbs[rightThumbIndex].value;
+                    const leftThumbValue  = (rightThumbValue * 0.5);
+
+                    this.thumbs.splice(0, 0, new UIMultiRangeThumb(this, 0, leftThumbValue));
+                    this.thumbs[0].build();
+
+                    for(var i = 1; i < this.thumbs.length; ++i) { 
+                        this.thumbs[i].index = i;
+                    }
+
+                    this.segments.splice(0, 0, new UIMultiRangeSegment(this, 0, segment.editable, segment.color, segment.mode));
+                    this.segments[0].build();
+
+                    for(var i = 1; i < this.segments.length; ++i) {
+                        this.segments[i].index = i;
+                    }
+
+                    this.segments[1].update();
+
+                } else if(rightThumbIndex == this.thumbs.length) {
+                    // Add new thumb and segment at the end
+                    const leftThumbValue  = this.thumbs[leftThumbIndex].value;
+                    const rightThumbValue = ((this.max - leftThumbValue) * 0.5) + leftThumbValue;
+
+                    this.thumbs.push(new UIMultiRangeThumb(this, rightThumbIndex, rightThumbValue));
+                    this.thumbs[rightThumbIndex].build();
+
+                    this.segments.push(new UIMultiRangeSegment(this, segmentIndex + 1, segment.editable, segment.color, segment.mode));
+                    this.segments[segmentIndex + 1].build();
+                    this.segments[segmentIndex].update();
+                } else {
+                    // Add new thumb and segment in the middle
+                    const leftThumbValue  = this.thumbs[leftThumbIndex].value;
+                    const rightThumbValue = this.thumbs[rightThumbIndex].value;
+                    const newThumbValue   = ((rightThumbValue - leftThumbValue) * 0.5) + leftThumbValue;
+
+                    this.thumbs.splice(rightThumbIndex, 0, new UIMultiRangeThumb(this, rightThumbIndex, newThumbValue));
+                    this.thumbs[rightThumbIndex].build();
+
+                    for(var i = rightThumbIndex; i < this.thumbs.length; ++i) {
+                        this.thumbs[i].index = i;
+                    }
+
+                    this.segments.splice(rightThumbIndex, 0, new UIMultiRangeSegment(this, rightThumbIndex, segment.editable, segment.color, segment.mode));
+                    this.segments[rightThumbIndex].build();
+
+                    for(var i = rightThumbIndex; i < this.segments.length; ++i) {
+                        this.segments[i].index = i;
+                    }
+
+                    this.segments[rightThumbIndex].update();
+                }
+            }
+        }
+    }
+
+    /**
+     * 
+     */
+    removeSegment(segment) {
+        if(segment && this.segments.length > 1) { 
             const segmentIndex    = segment.index;
             const leftThumbIndex  = segmentIndex - 1;
             const rightThumbIndex = segmentIndex;
 
-            if(leftThumbIndex < 0) {
-                // Add new thumb and segment at the start
-                const rightThumbValue = this.thumbs[rightThumbIndex].value;
-                const leftThumbValue  = (rightThumbValue * 0.5);
+            if(segmentIndex == (this.segments.length - 1)) {
+                // Remove far right segment
+                this.thumbs[leftThumbIndex].destroy();
+                this.thumbs.splice(leftThumbIndex, 1);
 
-                this.thumbs.splice(0, 0, new UIMultiRangeThumb(this, 0, leftThumbValue));
-                this.thumbs[0].build();
-
-                for(var i = 1; i < this.thumbs.length; ++i) { 
+                for(var i = 0; i < this.thumbs.length; ++i) {
                     this.thumbs[i].index = i;
                 }
 
-                this.segments.splice(0, 0, new UIMultiRangeSegment(this, 0, segment.editable, segment.color, segment.mode));
-                this.segments[0].build();
+                this.segments[segmentIndex].destroy();
+                this.segments.splice(segmentIndex, 1);
 
-                for(var i = 1; i < this.segments.length; ++i) {
+                for(var i = 0; i < this.segments.length; ++i) {
                     this.segments[i].index = i;
                 }
 
-                this.segments[1].update();
-
-            } else if(rightThumbIndex == this.thumbs.length) {
-                // Add new thumb and segment at the end
-                const leftThumbValue  = this.thumbs[leftThumbIndex].value;
-                const rightThumbValue = ((this.max - leftThumbValue) * 0.5) + leftThumbValue;
-
-                this.thumbs.push(new UIMultiRangeThumb(this, rightThumbIndex, rightThumbValue));
-                this.thumbs[rightThumbIndex].build();
-
-                this.segments.push(new UIMultiRangeSegment(this, segmentIndex + 1, segment.editable, segment.color, segment.mode));
-                this.segments[segmentIndex + 1].build();
-                this.segments[segmentIndex].update();
-            } else {
-                // Add new thumb and segment in the middle
+                this.segments[(this.segments.length - 1)].update();
+            } else if(segmentIndex >= 1) {
+                // Remove middle segment and expand to fill the space evenly.
                 const leftThumbValue  = this.thumbs[leftThumbIndex].value;
                 const rightThumbValue = this.thumbs[rightThumbIndex].value;
                 const newThumbValue   = ((rightThumbValue - leftThumbValue) * 0.5) + leftThumbValue;
 
-                this.thumbs.splice(rightThumbIndex, 0, new UIMultiRangeThumb(this, rightThumbIndex, newThumbValue));
-                this.thumbs[rightThumbIndex].build();
+                this.thumbs[leftThumbIndex].destroy();
+                this.thumbs.splice(leftThumbIndex, 1);
 
-                for(var i = rightThumbIndex; i < this.thumbs.length; ++i) {
+                for(var i = 0; i < this.thumbs.length; ++i) {
                     this.thumbs[i].index = i;
                 }
 
-                this.segments.splice(rightThumbIndex, 0, new UIMultiRangeSegment(this, rightThumbIndex, segment.editable, segment.color, segment.mode));
-                this.segments[rightThumbIndex].build();
+                this.thumbs[leftThumbIndex].value = newThumbValue;
+                this.thumbs[leftThumbIndex].update();
 
-                for(var i = rightThumbIndex; i < this.segments.length; ++i) {
+                this.segments[segmentIndex].destroy();
+                this.segments.splice(segmentIndex, 1);
+
+                for(var i = 0; i < this.segments.length; ++i) {
+                    this.segments[i].index = i;
+                    this.segments[i].update();
+                }
+
+            } else {
+                // Remove far left segment
+                this.thumbs[rightThumbIndex].destroy();
+                this.thumbs.splice(0, 1);
+
+                for(var i = 0; i < this.thumbs.length; ++i) {
+                    this.thumbs[i].index = i;
+                }
+
+                this.segments[0].destroy();
+                this.segments.splice(0, 1);
+
+                for(var i = 0; i < this.segments.length; ++i) {
                     this.segments[i].index = i;
                 }
 
-                this.segments[rightThumbIndex].update();
+                this.segments[0].update();
             }
         }
     }
