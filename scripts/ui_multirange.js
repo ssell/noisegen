@@ -81,8 +81,17 @@ class UIMultiRangeThumb {
         relPos = Math.min(Math.max(relPos, 0.0), 1.0);
         relPos = relPos * parentWidth;
 
+
         this.obj.css("margin-left", relPos);
         this.pos = relPos;
+    }
+
+    /**
+     * 
+     */
+    update() {
+        this.positionVertical();
+        this.positionHorizontal();
     }
 
     /**
@@ -161,17 +170,6 @@ class UIMultiRangeThumb {
 // UIMultiRangeSegmentEditor
 //------------------------------------------------------------------------------------------
 
-$(document).mouseup(function (e)
-{
-    var container = $("YOUR CONTAINER SELECTOR");
-
-    if (!container.is(e.target) // if the target of the click isn't the container...
-        && container.has(e.target).length === 0) // ... nor a descendant of the container
-    {
-        container.hide();
-    }
-});
-
 class UIMultiRangeSegmentEditor {
     constructor(parent, segment) {
         this.parent    = parent;
@@ -180,6 +178,9 @@ class UIMultiRangeSegmentEditor {
         this.color     = segment.color;
     }
 
+    /**
+     * 
+     */
     bindActions() {
         const self = this;
 
@@ -202,8 +203,15 @@ class UIMultiRangeSegmentEditor {
             self.segment.setColor(color);
             
         });
+
+        $("#multirange_segment_editor_split").click(function(e) {
+            self.parent.splitSegment(self.segment);
+        });
     }
 
+    /**
+     * 
+     */
     build() {
         if(this.parentObj) {
             var html = 
@@ -227,8 +235,8 @@ class UIMultiRangeSegmentEditor {
                     "</table>" +
                     "<hr>" + 
                     "<div class='multirange_button_holder'>" + 
-                        "<button type='button' class='multirange_button'>Split</button>" + 
-                        "<button type='button' class='multirange_button'>Remove</button>" +
+                        "<button type='button' id='multirange_segment_editor_split' class='multirange_button' " + (this.segment.width < 12 ? "disabled" : "") + ">Split</button>" + 
+                        "<button type='button' id='multirange_segment_editor_remove' class='multirange_button'>Remove</button>" +
                     "</div>" +
                 "</div>";
 
@@ -250,13 +258,13 @@ class UIMultiRangeSegmentEditor {
  * 
  */
 class UIMultiRangeSegment {
-    constructor(parent, index, editable, color, type) {
+    constructor(parent, index, editable, color, mode) {
         this.parent    = parent;
         this.parentObj = parent.backgroundObj;
         this.index     = index;
         this.editable  = editable;
         this.color     = color;
-        this.type      = type;
+        this.mode      = mode;
         this.obj       = null;
         this.pos       = 0;
         this.width     = 0;
@@ -347,6 +355,19 @@ class UIMultiRange {
         this.values   = null;
         this.thumbs   = null;
         this.segments = null;
+    }
+
+    /**
+     * 
+     */
+    update() {
+        for(var i = 0; i < this.thumbs.length; ++i) {
+            this.thumbs[i].update();
+        }
+
+        for(var i = 0; i < this.segments.length; ++i) {
+            this.segments[i].update();
+        }
     }
 
     /**
@@ -458,7 +479,9 @@ class UIMultiRange {
         this.segments[left].update();
         this.segments[right].update();
 
-        this.callback(this);
+        if(this.callback) {
+            this.callback(this);
+        }
     }
 
     /**
@@ -476,6 +499,73 @@ class UIMultiRange {
         }
 
         return result;
+    }
+
+    /**
+     * 
+     */
+    splitSegment(segment) {
+        console.log("split segment '" + segment.mode + "'");
+        if(segment) {
+            const segmentIndex    = segment.index;
+            const leftThumbIndex  = segmentIndex - 1;
+            const rightThumbIndex = segmentIndex;
+
+            if(leftThumbIndex < 0) {
+                // Add new thumb and segment at the start
+                const rightThumbValue = this.thumbs[rightThumbIndex].value;
+                const leftThumbValue  = (rightThumbValue * 0.5);
+
+                this.thumbs.splice(0, 0, new UIMultiRangeThumb(this, 0, leftThumbValue));
+                this.thumbs[0].build();
+
+                for(var i = 1; i < this.thumbs.length; ++i) { 
+                    this.thumbs[i].index = i;
+                }
+
+                this.segments.splice(0, 0, new UIMultiRangeSegment(this, 0, segment.editable, segment.color, segment.mode));
+                this.segments[0].build();
+
+                for(var i = 1; i < this.segments.length; ++i) {
+                    this.segments[i].index = i;
+                }
+
+                this.segments[1].update();
+
+            } else if(rightThumbIndex == this.thumbs.length) {
+                // Add new thumb and segment at the end
+                const leftThumbValue  = this.thumbs[leftThumbIndex].value;
+                const rightThumbValue = ((this.max - leftThumbValue) * 0.5) + leftThumbValue;
+
+                this.thumbs.push(new UIMultiRangeThumb(this, rightThumbIndex, rightThumbValue));
+                this.thumbs[rightThumbIndex].build();
+
+                this.segments.push(new UIMultiRangeSegment(this, segmentIndex + 1, segment.editable, segment.color, segment.mode));
+                this.segments[segmentIndex + 1].build();
+                this.segments[segmentIndex].update();
+            } else {
+                // Add new thumb and segment in the middle
+                const leftThumbValue  = this.thumbs[leftThumbIndex].value;
+                const rightThumbValue = this.thumbs[rightThumbIndex].value;
+                const newThumbValue   = ((rightThumbValue - leftThumbValue) * 0.5) + leftThumbValue;
+
+                this.thumbs.splice(rightThumbIndex, 0, new UIMultiRangeThumb(this, rightThumbIndex, newThumbValue));
+                this.thumbs[rightThumbIndex].build();
+
+                for(var i = rightThumbIndex; i < this.thumbs.length; ++i) {
+                    this.thumbs[i].index = i;
+                }
+
+                this.segments.splice(rightThumbIndex, 0, new UIMultiRangeSegment(this, rightThumbIndex, segment.editable, segment.color, segment.mode));
+                this.segments[rightThumbIndex].build();
+
+                for(var i = rightThumbIndex; i < this.segments.length; ++i) {
+                    this.segments[i].index = i;
+                }
+
+                this.segments[rightThumbIndex].update();
+            }
+        }
     }
 }
 
@@ -532,7 +622,7 @@ function toPaletteDescriptor(multirange) {
 
     if(multirange) {
         for(var i = 0; i < multirange.segments.length; ++i) {
-            var mode  = multirange.segments[i].type;
+            var mode  = multirange.segments[i].mode;
             var color = rgbToRgb(multirange.segments[i].obj.css("background-color"));
 
             if(color) {

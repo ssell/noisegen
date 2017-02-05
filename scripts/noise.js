@@ -706,7 +706,7 @@ class NoisePerlin extends Noise {
 
     static getParams() {
         super.getParams();
-        return "octaves:int_range 1 20 5;persistence:float_range 0.0 1.0 0.5;scale:float_range 0.0001 1.0 0.01;"
+        return "octaves:int_range 1 20 5;persistence:float_range 0.0 1.0 0.5;scale:float_range 0.0001 0.1 0.01;"
     }
 
     getRandom(x, y) {

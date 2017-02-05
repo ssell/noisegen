@@ -28,6 +28,8 @@
  */
 
 var gSurface = null;
+var gGrayMultiRange = null;
+var gColorMultiRange = null;
 
 /**
  * Populates the #noise_algorithms select element with all
@@ -193,6 +195,8 @@ function enableColorModeGray() {
 
     $("#ui_color_grayscale").removeClass("hidden");
     $("#ui_color_color").addClass("hidden");
+
+    gGrayMultiRange.update();
 }
 
 /**
@@ -206,6 +210,8 @@ function enableColorModeColor() {
 
     $("#ui_color_color").removeClass("hidden");
     $("#ui_color_grayscale").addClass("hidden");
+
+    gColorMultiRange.update();
 }
 
 /**
@@ -219,30 +225,67 @@ function toggleColorMode() {
     }
 }
 
-var gTemp = null;
-
 /**
  * 
  */
 function onMultiRangeUpdate(multirange) {
-    gTemp = multirange;
+    
 }
 
 /**
  * 
  */
 function applyColorProperties() {
-    var descriptor = toPaletteDescriptor(gTemp);
+    var descriptor = "";
+    
+    if(gSurface.gray) {
+        descriptor = toPaletteDescriptor(gGrayMultiRange);
+    } else {
+        descriptor = toPaletteDescriptor(gColorMultiRange);
+    }
+
+    console.log("Apply: '" + descriptor + "'");
 
     gSurface.setPalette(descriptor, true);
     gSurface.applyPalette();
+}
+
+/**
+ * 
+ */
+function buildColorPropertiesGray() {
+    var multiranges = buildMultiRanges($("#ui_color_grayscale"));
+
+    if(multiranges.length) {
+        gGrayMultiRange = multiranges[0];
+    }
+}
+
+/**
+ * 
+ */
+function buildColorPropertiesColor() {
+    var multiranges = buildMultiRanges($("#ui_color_color"));
+
+    if(multiranges.length) {
+        console.log("built");
+        gColorMultiRange = multiranges[0];
+    }
+}
+
+/**
+ * 
+ */
+function buildColorProperties() {
+    buildColorPropertiesGray();
+    buildColorPropertiesColor();
 }
 
 $(document).ready(function() {
 
     gSurface = new Surface();
 
-    var multiranges = buildMultiRanges($("#control_panel"), onMultiRangeUpdate);
+    buildColorProperties();
 
     populateAlgorithmList();
     updateDimensions();

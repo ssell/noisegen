@@ -79,11 +79,7 @@ class Palette {
 
         this.segments.sort(function(a, b) {
             return (a.start - b.start);
-        })
-
-        for(var i = 0; i < this.segments.length; ++i) {
-            console.log(this.segments[i].toStr());
-        }
+        });
     }
 
     /**
