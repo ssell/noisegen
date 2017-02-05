@@ -62,10 +62,16 @@ function buildNoiseParamsList() {
     var params = "";
 
     $("#noise_properties .noise_property_value").each(function() {
-        var id   = $(this).attr('id');
-        var temp = id.split("_");
-        var name = temp[0];
-        var value = $(this).val();
+        var id    = $(this).attr('id');
+        var temp  = id.split("_");
+        var name  = temp[0];
+        var value = "";
+        
+        if($(this).is("input")) {
+            value = $(this).val();
+        } else {
+            value = $(this).text();
+        }
 
         params += name + ":" + value + ";";
     });
