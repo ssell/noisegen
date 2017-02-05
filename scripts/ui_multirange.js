@@ -211,6 +211,10 @@ class UIMultiRangeSegmentEditor {
             
         });
 
+        $("#multirange_segment_editor_mode").change(function(e) {
+            self.segment.setMode($(this).val());
+        });
+
         $("#multirange_segment_editor_split").click(function(e) {
             self.parent.splitSegment(self.segment);
         });
@@ -239,9 +243,10 @@ class UIMultiRangeSegmentEditor {
                             "</td>" +
                             "<td>" + 
                                 "<select id='multirange_segment_editor_mode' class='multirange_select'>" +
-                                    "<option>solid</option>" +
-                                    "<option>smooth</option>" + 
-                                    "<option>none</option>" +
+                                    "<option" + (this.segment.mode == "Solid" ? " selected='selected'" : "") + ">Solid</option>" +
+                                    "<option" + (this.segment.mode == "Smooth RGB" ? " selected='selected'" : "") + ">Smooth RGB</option>" + 
+                                    "<option" + (this.segment.mode == "Smooth HSV" ? " selected='selected'" : "") + ">Smooth HSV</option>" +
+                                    "<option" + (this.segment.mode == "None" ? " selected='selected'" : "") + ">None</option>" +
                                 "</select>" +
                             "</td>" +
                     "</table>" +
@@ -271,15 +276,16 @@ class UIMultiRangeSegmentEditor {
  */
 class UIMultiRangeSegment {
     constructor(parent, index, editable, color, mode) {
-        this.parent    = parent;
-        this.parentObj = parent.backgroundObj;
-        this.index     = index;
-        this.editable  = editable;
-        this.color     = color;
-        this.mode      = mode;
-        this.obj       = null;
-        this.pos       = 0;
-        this.width     = 0;
+        this.parent     = parent;
+        this.parentObj  = parent.backgroundObj;
+        this.index      = index;
+        this.editable   = editable;
+        this.color      = color;
+        this.colorRight = color;             // We only smooth in one direction: to the right.
+        this.mode       = mode;
+        this.obj        = null;
+        this.pos        = 0;
+        this.width      = 0;
     }
 
     /**
@@ -296,12 +302,66 @@ class UIMultiRangeSegment {
     /**
      * 
      */
+    updateLerpValues() {
+        var segmentRight = this.parent.getSegment(this.index + 1);
+
+        if(segmentRight) {
+            this.colorRight = segmentRight.color;
+        } else {
+            this.colorRight = this.color;
+        }
+    }
+
+    /**
+     * 
+     */
+    updateBackground() {
+        
+        this.obj.css("background", "");
+        this.obj.css("background-color", this.color);
+
+        switch(this.mode) { 
+        case "Solid":
+            break;
+
+        case "Smooth RGB":
+        case "Smooth HSV":
+            this.updateLerpValues();
+
+            const gradient = ", " + this.color + ", " + this.color + ", " + this.colorRight;
+            const webkit   = "-webkit-linear-gradient(left" + gradient + ")";
+            const mozilla  = "-moz-linear-gradient(left" + gradient + ")";
+            const standard = "linear-gradient(to right" + gradient + ")";
+
+            this.obj.css({ background: webkit }).css({ background: mozilla }).css({ background: standard });
+            break;
+
+        case "None":
+            this.obj.css("background-color", "#CCCCCC");
+            break;
+
+        default:
+            break;
+        }
+    }
+
+    /**
+     * 
+     */
     update() {
         this.calculatePosWidth();
+        this.updateBackground();
 
-        this.obj.css("background-color", this.color);
         this.obj.css("margin-left", this.pos);
         this.obj.css("width", this.width);
+    }
+
+    /**
+     * 
+     */
+    setMode(mode) {
+        this.mode = mode;
+        this.updateBackground();
     }
 
     /**
@@ -523,6 +583,19 @@ class UIMultiRange {
     /**
      * 
      */
+    getSegment(index) { 
+        var result = null;
+
+        if((index >= 0) && (index < this.segments.length)) {
+            result = this.segments[index];
+        }
+
+        return result;
+    }
+
+    /**
+     * 
+     */
     splitSegment(segment) {
         if(segment) {
             const segmentIndex = segment.index;
@@ -693,30 +766,6 @@ function buildMultiRanges(parent, updateCallback) {
 }
 
 /**
- * http://stackoverflow.com/a/5624139
- */
-function hexToRgb(hex) {
-    var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    return result ? {
-        r: parseInt(result[1], 16),
-        g: parseInt(result[2], 16),
-        b: parseInt(result[3], 16)
-    } : null;
-}
-
-/**
- * http://stackoverflow.com/a/3752026
- */
-function rgbToRgb(rgb) {
-    var rgb = rgb.replace(/^(rgb|rgba)\(/,'').replace(/\)$/,'').replace(/\s/g,'').split(',');
-    return rgb ? {
-        r: rgb[0],
-        g: rgb[1],
-        b: rgb[2]
-    } : null;
-}
-
-/**
  * 
  */
 function toPaletteDescriptor(multirange) {
@@ -725,7 +774,7 @@ function toPaletteDescriptor(multirange) {
     if(multirange) {
         for(var i = 0; i < multirange.segments.length; ++i) {
             var mode  = multirange.segments[i].mode;
-            var color = rgbToRgb(multirange.segments[i].obj.css("background-color"));
+            var color = tinycolor(multirange.segments[i].color).toRgb();
 
             if(color) {
                 var start = 0;
@@ -735,7 +784,7 @@ function toPaletteDescriptor(multirange) {
                 } else {
                     start = parseInt(multirange.thumbs[(i - 1)].value);
                 }
-
+                
                 descriptor.push(start + "," + color.r + "," + color.g + "," + color.b + "," + mode);
             }
         }

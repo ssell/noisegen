@@ -26,6 +26,34 @@
 // Palette
 //------------------------------------------------------------------------------------------
 
+function lerp(from, to, frac) {
+    return (from * (1.0 - frac)) + (to * frac);
+}
+
+function lerpColorRGB(r0, g0, b0, r1, g1, b1, frac) {
+    return  {
+        r: Math.trunc(lerp(r0, r1, frac)), 
+        g: Math.trunc(lerp(g0, g1, frac)), 
+        b: Math.trunc(lerp(b0, b1, frac)) 
+    };
+}
+
+function lerpColorHSV(r0, g0, b0, r1, g1, b1, frac) {
+    // Convert RGB to HSV first
+    var rgb0 = tinycolor({ r: r0, g: g0, b: b0 });
+    var rgb1 = tinycolor({ r: r1, g: g1, b: b1 });
+
+    var hsv0 = rgb0.toHsv();
+    var hsv1 = rgb1.toHsv();
+
+    // Lerp the HSV values
+    var lerpHsv = tinycolor({ h: lerp(hsv0.h, hsv1.h, frac), s: lerp(hsv0.s, hsv1.s, frac), v: lerp(hsv0.v, hsv1.v, frac) });
+
+    // Convert HSV back to RGB
+    var lerpRgb = lerpHsv.toRgb();
+
+    return {r: lerpRgb.r, g: lerpRgb.g, b: lerpRgb.b };
+}
 
 class PaletteSegment {
     constructor(descriptor) {
@@ -111,19 +139,30 @@ class Palette {
         var b = value;
 
         if(segmentIndex < this.segments.length) {
-            switch(this.segments[segmentIndex].mode) {
-            case "solid":
+            const mode = String(this.segments[segmentIndex].mode).toLocaleLowerCase();
+
+            if(mode.localeCompare("solid") == 0) {
                 r = this.segments[segmentIndex].r;
                 g = this.segments[segmentIndex].g;
                 b = this.segments[segmentIndex].b;
-                break;
+            } else if(mode.includes("smooth")) {
+                var left  = this.segments[segmentIndex];
+                var right = this.segments[segmentIndex + 1];
+                var frac  = (value - left.start) / (right.start - left.start);
 
-            case "smooth":
-                break;
+                var smoothed = null;
 
-            case "none":
-            default:
-                break;
+                if(mode.includes("rgb")) {
+                    smoothed = lerpColorRGB(left.r, left.g, left.b, right.r, right.g, right.b, frac);
+                } else if(mode.includes("hsv")) {
+                    smoothed = lerpColorHSV(left.r, left.g, left.b, right.r, right.g, right.b, frac);
+                }
+
+                if(smoothed) {
+                    r = smoothed.r;
+                    g = smoothed.g;
+                    b = smoothed.b;
+                }
             }
         }
 
