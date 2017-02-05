@@ -1,3 +1,9 @@
+hr
+{
+    border: 0;
+    border-top: 1px solid #333333;   
+}
+
 .multirange 
 {
     display: inline-block;
@@ -17,8 +23,8 @@
 {
     position: absolute;
     
-    background-color: #FFF;
-    border: 1px solid #333;
+    background-color: #FfffFF;
+    border: 1px solid #333333;
     
     width: 3px;
     height: 16px;
@@ -36,6 +42,83 @@
 .multirange_segment 
 {
     position: absolute;
-
     height: 10px;
+}
+
+.multirange_segment_editable
+{
+    cursor: pointer;
+}
+
+
+.multirange_segment_editable:hover
+{
+    background-color: #FFFFFF;
+}
+
+.multirange_segment_editor
+{
+    position: absolute;
+
+    margin-top: 5px;
+    padding: 10px;
+
+    width: 200px;
+    height: 100px;
+
+    background-color: rgb(28, 28, 28);
+    border: 1px solid #333333;
+
+    text-align: left;
+
+    z-index: 2;
+}
+
+.multirange_colorpick_container 
+{
+    background-color: #CCC;
+    border: 1px solid #333;
+}
+
+.multirange_colorpick_replacer
+{
+    background-color: #CCC;
+    border: 0px solid #000;
+}
+
+.multirange_table
+{
+    table-layout: fixed;
+    width: 100%;
+}
+
+.multirange_select
+{
+    width: 80%;
+
+    background-color: #CCC;
+    border: 0px solid black;
+
+    padding: 2px;
+}
+
+.multirange_button_holder
+{
+    text-align: center;
+    width: 100%;
+}
+
+.multirange_button 
+{
+    width: 40%;
+
+    background-color: #CCC;
+    border: 1px solid #333;
+    border-radius: 5px;
+}
+
+.multirange_button:hover
+{
+    background-color: #DDD;
+    cursor: pointer;
 }

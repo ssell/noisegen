@@ -158,6 +158,90 @@ class UIMultiRangeThumb {
 
 
 //------------------------------------------------------------------------------------------
+// UIMultiRangeSegmentEditor
+//------------------------------------------------------------------------------------------
+
+$(document).mouseup(function (e)
+{
+    var container = $("YOUR CONTAINER SELECTOR");
+
+    if (!container.is(e.target) // if the target of the click isn't the container...
+        && container.has(e.target).length === 0) // ... nor a descendant of the container
+    {
+        container.hide();
+    }
+});
+
+class UIMultiRangeSegmentEditor {
+    constructor(parent, segment) {
+        this.parent    = parent;
+        this.parentObj = parent.obj;
+        this.segment   = segment;
+        this.color     = segment.color;
+    }
+
+    bindActions() {
+        const self = this;
+
+        $(document).mouseup(function(e) {
+            if(!self.obj.is(e.target) && (self.obj.has(e.target).length === 0)) {
+                self.obj.remove();
+            }
+        });
+
+        $("#multirange_segment_editor_color").spectrum({ 
+            color: this.color, 
+            showPalette: false, 
+            appendTo: this.obj,
+            containerClassName: "multirange_colorpick_container",
+            replacerClassName: "multirange_colorpick_replacer",
+            showButtons: false });
+
+        $("#multirange_segment_editor_color").change(function(e) {
+            const color = $(this).spectrum("get").toHexString();
+            self.segment.setColor(color);
+            
+        });
+    }
+
+    build() {
+        if(this.parentObj) {
+            var html = 
+                "<div class='multirange_segment_editor'>" +
+                    "<table class='multirange_table'>" + 
+                        "<tr>" + 
+                            "<td width='50%'>Color</td>" +
+                            "<td width='50%'><input id='multirange_segment_editor_color' type='text'></td>" +
+                        "</tr>" +
+                        "<tr>" +
+                            "<td>" +
+                                "Mode" + 
+                            "</td>" +
+                            "<td>" + 
+                                "<select id='multirange_segment_editor_mode' class='multirange_select'>" +
+                                    "<option>solid</option>" +
+                                    "<option>smooth</option>" + 
+                                    "<option>none</option>" +
+                                "</select>" +
+                            "</td>" +
+                    "</table>" +
+                    "<hr>" + 
+                    "<div class='multirange_button_holder'>" + 
+                        "<button type='button' class='multirange_button'>Split</button>" + 
+                        "<button type='button' class='multirange_button'>Remove</button>" +
+                    "</div>" +
+                "</div>";
+
+            this.parentObj.append(html);
+            this.obj = this.parentObj.find(".multirange_segment_editor").last();
+
+            this.bindActions();  
+        }
+    }
+}
+
+
+//------------------------------------------------------------------------------------------
 // UIMultiRangeSegment
 //------------------------------------------------------------------------------------------
 
@@ -166,12 +250,13 @@ class UIMultiRangeThumb {
  * 
  */
 class UIMultiRangeSegment {
-    constructor(parent, index, color, type) {
+    constructor(parent, index, editable, color, type) {
         this.parent    = parent;
+        this.parentObj = parent.backgroundObj;
         this.index     = index;
+        this.editable  = editable;
         this.color     = color;
         this.type      = type;
-        this.parentObj = parent.backgroundObj;
         this.obj       = null;
         this.pos       = 0;
         this.width     = 0;
@@ -202,11 +287,41 @@ class UIMultiRangeSegment {
     /**
      * 
      */
+    setColor(color) {
+        this.color = color;
+        this.update();
+    }
+
+    /**
+     * 
+     */
+    bindActions() {
+        if(this.editable) {
+            var parent = this.parent;
+            var self = this;
+
+            this.obj.click(function() { 
+                var editor = new UIMultiRangeSegmentEditor(parent, self);
+                editor.build();
+            });
+        }
+    }
+
+    /**
+     * 
+     */
     build() {
-        this.parentObj.append("<div class='multirange_segment' />");
+        var classes = "multirange_segment";
+
+        if(this.editable) {
+            classes += " multirange_segment_editable";
+        }
+
+        this.parentObj.append("<div class='" + classes + "' />");
         this.obj = this.parentObj.find(".multirange_segment").last();
 
         this.update();
+        this.bindActions();
     }
 }
 
@@ -224,6 +339,7 @@ class UIMultiRange {
         this.id       = id;
         this.callback = updateCallback;
         this.obj      = $("#" + id);
+        this.editable = false;
         this.count    = 0;
         this.step     = 0;
         this.min      = 0;
@@ -297,7 +413,7 @@ class UIMultiRange {
                 type = "none";
             }
 
-            this.segments[i] = new UIMultiRangeSegment(this, i, color, type);
+            this.segments[i] = new UIMultiRangeSegment(this, i, this.editable, color, type);
             this.segments[i].build();
         }
     }
@@ -308,6 +424,13 @@ class UIMultiRange {
     build() {
         if(this.obj) {
             this.obj.empty();
+
+            var rangeEditStr = this.obj.data("rangeedit");
+
+            if(rangeEditStr) {
+                rangeEditStr = String(rangeEditStr).toLocaleLowerCase();
+                this.editable = (rangeEditStr.localeCompare("true") == 0);
+            }
 
             this.count    = Number(this.obj.data("rangecount"));
             this.step     = Number(this.obj.data("rangestep"));

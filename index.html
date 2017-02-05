@@ -3,11 +3,13 @@
     <title>noisegen</title>
 
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato">
+    <link rel="stylesheet" href="third-party/spectrum/spectrum.css">
     <link rel="stylesheet" href="styles/noisegen.css">
     <link rel="stylesheet" href="styles/surface.css">
     <link rel="stylesheet" href="styles/multirange.css">
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <script src="third-party/spectrum/spectrum.js"></script>
     <script src="scripts/surface.js"></script>
     <script src="scripts/ui_multirange.js"></script>
     <script src="scripts/ui_builder.js"></script>
@@ -59,12 +61,12 @@
                 <div id="ui_color_grayscale">
                     <div class="ui_holder ui_title">Scale Modifer</div>
                     <div class="ui_holder">
-                        <div id="grayscale_multirange" class="multirange" data-rangecount="2" data-rangestep="1" data-rangemin="0" data-rangemax="255" data-rangevalues="0,255" data-rangecolors="#000000,#CCCCCC,#FFFFFF" data-rangetypes="solid,none,solid"></div>
+                        <div id="grayscale_multirange" class="multirange" data-rangeedit="false" data-rangecount="2" data-rangestep="1" data-rangemin="0" data-rangemax="255" data-rangevalues="0,255" data-rangecolors="#000000,#CCCCCC,#FFFFFF" data-rangetypes="solid,none,solid"></div>
                     </div>
                 </div>
                 <div id="ui_color_color" class="hidden">
                     <div class="ui_holder">
-                        <div id="color_multirange" class="multirange" data-rangecount="3" data-rangestep="1" data-rangemin="0" data-rangemax="100" data-rangevalues="0,50,100" data-rangecolors="#FF0000,#00FF00,#0000FF,#FFFF00"></div>
+                        <div id="color_multirange" class="multirange" data-rangeedit="true" data-rangecount="2" data-rangestep="1" data-rangemin="0" data-rangemax="255" data-rangevalues="85,170" data-rangecolors="#FF0000,#00FF00,#0000FF" data-rangetypes="solid,solid,solid"></div>
                     </div>
                 </div>
             </div>
