@@ -146,22 +146,30 @@ class Palette {
                 g = this.segments[segmentIndex].g;
                 b = this.segments[segmentIndex].b;
             } else if(mode.includes("smooth")) {
-                var left  = this.segments[segmentIndex];
-                var right = this.segments[segmentIndex + 1];
-                var frac  = (value - left.start) / (right.start - left.start);
+                if(segmentIndex < (this.segments.length - 1)) {
+                    var left  = this.segments[segmentIndex];
+                    var right = this.segments[segmentIndex + 1];
+                    var frac  = (value - left.start) / (right.start - left.start);
 
-                var smoothed = null;
+                    var smoothed = null;
 
-                if(mode.includes("rgb")) {
-                    smoothed = lerpColorRGB(left.r, left.g, left.b, right.r, right.g, right.b, frac);
-                } else if(mode.includes("hsv")) {
-                    smoothed = lerpColorHSV(left.r, left.g, left.b, right.r, right.g, right.b, frac);
-                }
+                    if(mode.includes("rgb")) {
+                        smoothed = lerpColorRGB(left.r, left.g, left.b, right.r, right.g, right.b, frac);
+                    } else if(mode.includes("hsv")) {
+                        smoothed = lerpColorHSV(left.r, left.g, left.b, right.r, right.g, right.b, frac);
+                    }
 
-                if(smoothed) {
-                    r = smoothed.r;
-                    g = smoothed.g;
-                    b = smoothed.b;
+                    if(smoothed) {
+                        r = smoothed.r;
+                        g = smoothed.g;
+                        b = smoothed.b;
+                    }
+                } else {
+                    var left  = this.segments[segmentIndex];
+
+                    r = left.r;
+                    g = left.g;
+                    b = left.b;
                 }
             }
         }
@@ -213,6 +221,10 @@ class Surface {
         }
     }
 
+    updateRawImageData() {
+        this.rawImageData = this.context.getImageData(0, 0, this.width, this.height);
+    }
+
     getRawImageData() {
         return this.rawImageData;
     }
@@ -244,12 +256,10 @@ class Surface {
 
     drawImage(data) {
         this.context.putImageData(data, 0, 0);
-        this.rawImageData = this.context.getImageData(0, 0, this.width, this.height);
     }
 
     drawImageRect(data, startX, endX, startY, endY) {
         this.context.putImageData(data, 0, 0, startX, startY, (endX - startX), (endY - startY));
-        this.rawImageData = this.context.getImageData(0, 0, this.width, this.height);
     }
 
     size() {
@@ -269,24 +279,56 @@ class Surface {
         }
     }
 
-    applyPalette() {
-        this.transformedImageData = this.context.createImageData(this.rawImageData);
-            
+    getPalette() {
+        this.activePalette = (this.gray ? this.grayPalette : this.colorPalette);
+        return this.activePalette;
+    }
+}
+
+//------------------------------------------------------------------------------------------
+// Multi-threaded Palette Application 
+//------------------------------------------------------------------------------------------
+
+self.onmessage = function(e) {
+    var data = e.data;
+
+    if(data) {
+
+        const descr  = data.paletteDescr;
+        const startX = data.startX;
+        const startY = data.startY;
+        const endX   = data.endX;
+        const endY   = data.endY;
+
+        var srcImage  = data.srcImage;
+        var destImage = data.destImage;
+        var palette   = new Palette();
+
+        palette.build(descr);
+
+        const progressStep = (endY - startY);
+        const width = srcImage.width;
+
         var value = 0;
         var color = null;
+        var index = 0;
 
-        for(var i = 0; i < this.transformedImageData.data.length; i += 4) {
-            value = this.rawImageData.data[i];
-            color = this.activePalette.transform(value);
+        for(var x = startX; x < endX; ++x) {
+            for(var y = startY; y < endY; ++y) {
+                index = ((y * width) + x) * 4;
 
-            if(color) {
-                this.transformedImageData.data[i + 0] = color.r;
-                this.transformedImageData.data[i + 1] = color.g;
-                this.transformedImageData.data[i + 2] = color.b;
-                this.transformedImageData.data[i + 3] = 255;
+                value = srcImage.data[index];
+                color = palette.transform(value);
+
+                destImage.data[index + 0] = color.r;
+                destImage.data[index + 1] = color.g;
+                destImage.data[index + 2] = color.b;
+                destImage.data[index + 3] = 255;
             }
+
+            postMessage({ progress: progressStep });
         }
 
-        this.context.putImageData(this.transformedImageData, 0, 0);
+        postMessage({ image: destImage, startX: startX, endX: endX, startY: startY, endY: endY });
     }
 }

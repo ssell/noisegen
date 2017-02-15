@@ -47,6 +47,7 @@ function triggerNoiseWorkers(surface, image, noise, params, numWorkersSide, widt
 					numWorkersComplete++;
 
 					if(numWorkersComplete == (numWorkersSide * numWorkersSide)) {
+                        surface.updateRawImageData();
 						endCallback();
 					}
 				}
@@ -169,6 +170,7 @@ function triggerNormalizedWorkers(surface, image, noise, params, numWorkersSide,
 						rawToImage(rawData, image);
 
 						surface.drawImage(image);
+                        surface.updateRawImageData();
 
 						endCallback();
 					}
@@ -192,14 +194,58 @@ function generateNoiseMultithreaded(surface, noise, normalized, params, numWorke
 	
 	var image = surface.getRawImageData();
 
-	var widthStep  = image.width / numWorkersSide;
-	var heightStep = image.height / numWorkersSide;
+	const widthStep  = image.width / numWorkersSide;
+	const heightStep = image.height / numWorkersSide;
 
-	var numWorkers = (numWorkersSide * numWorkersSide);
+	const numWorkers = (numWorkersSide * numWorkersSide);
 	
 	if(normalized) {
 		triggerNormalizedWorkers(surface, image, noise, params, numWorkersSide, image.width, image.height, widthStep, heightStep, endCallback);
 	} else {
 		triggerNoiseWorkers(surface, image, noise, params, numWorkersSide, widthStep, heightStep, endCallback);
 	}
+}
+
+/**
+ * 
+ */
+function applyPaletteMultithreaded(surface, numWorkersSide, endCallback) {
+    
+	var numWorkersComplete = 0;
+
+    var srcImage  = surface.getRawImageData();
+    var destImage = surface.context.createImageData(srcImage);
+    var palette   = surface.getPalette();
+    
+    const paletteDescr = palette.descriptor;
+
+    const widthStep  = srcImage.width / numWorkersSide;
+    const heightStep = srcImage.height / numWorkersSide;
+
+    const numWorkers = (numWorkersSide * numWorkersSide);
+
+    for(var x = 0; x < numWorkersSide; ++x) {
+        for(var y = 0; y < numWorkersSide; ++y) {
+            var worker = new Worker("scripts/surface.js");
+            var startX = (x * widthStep);
+            var endX   = ((x + 1) * widthStep);
+            var startY = (y * heightStep);
+            var endY   = ((y + 1) * heightStep);
+
+            worker.postMessage({ srcImage: srcImage, destImage: destImage, paletteDescr: paletteDescr, startX: startX, endX: endX, startY: startY, endY: endY });
+        
+            worker.onmessage = function(e) {
+                if(e.data.progress) {
+                    NoiseProgressBar.update(e.data.progress);
+                } else {
+                    surface.drawImageRect(e.data.image, e.data.startX, e.data.endX, e.data.startY, e.data.endY);
+                    numWorkersComplete++;
+
+                    if(numWorkersComplete == numWorkers) {
+                        endCallback();
+                    }
+                }
+            };
+        }
+    }
 }

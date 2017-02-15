@@ -139,23 +139,17 @@ function toggleGenerateButton() {
 }
 
 /**
- *
+ * 
  */
-function enableExportButton() {
-    $("#export_button").prop('disabled', '');
+function toggleApplyButton() {
+    $("#color_apply_button").prop('disabled', function(i, v) { return !v; });
 }
 
 /**
  *
  */
-function generateStop() {
-
-    NoiseProgressBar.stop();
-
-    toggleGenerateButton();
-    enableExportButton();
-
-    console.log("Noise '" + getSelectedAlgorithm() + "' (" + gSurface.width + " x " + gSurface.height + ") generated in " + NoiseProgressBar.elapsed() + "ms");
+function enableExportButton() {
+    $("#export_button").prop('disabled', '');
 }
 
 /**
@@ -239,9 +233,48 @@ function onMultiRangeUpdate(multirange) {
 }
 
 /**
+ *
+ */
+function generateStop() {
+
+    NoiseProgressBar.stop();
+
+    toggleGenerateButton();
+    toggleApplyButton();
+
+    enableExportButton();
+}
+
+/**
+ * Generates the noise image.
+ */
+function generateStart() {
+
+    NoiseProgressBar.start(gSurface.size());
+
+    toggleGenerateButton();
+    toggleApplyButton();
+
+    var noiseParams = buildNoiseParamsList();
+
+    updateDimensions();
+    generateNoiseMultithreaded(gSurface, getSelectedAlgorithm(), getNormalized(), noiseParams, 2, generateStop);
+}
+
+/**
  * 
  */
-function applyColorProperties() {
+function applyColorPropertiesStop() {
+    NoiseProgressBar.stop();
+
+    toggleApplyButton();
+    toggleGenerateButton();
+}
+
+/**
+ * 
+ */
+function applyColorPropertiesStart() {
     var descriptor = "";
     
     if(gSurface.gray) {
@@ -250,10 +283,14 @@ function applyColorProperties() {
         descriptor = toPaletteDescriptor(gColorMultiRange);
     }
 
-    console.log("Apply: '" + descriptor + "'");
+    gSurface.setPalette(descriptor, gSurface.gray);
 
-    gSurface.setPalette(descriptor, true);
-    gSurface.applyPalette();
+    NoiseProgressBar.start(gSurface.size());
+
+    toggleApplyButton();
+    toggleGenerateButton();
+
+    applyPaletteMultithreaded(gSurface, 2, applyColorPropertiesStop);
 }
 
 /**
@@ -274,7 +311,6 @@ function buildColorPropertiesColor() {
     var multiranges = buildMultiRanges($("#ui_color_color"));
 
     if(multiranges.length) {
-        console.log("built");
         gColorMultiRange = multiranges[0];
     }
 }
@@ -301,5 +337,5 @@ $(document).ready(function() {
     $("#export_button").click(function() { triggerExport(); });
     $("#noise_algorithms").change(function() { triggerUIRebuild(); });
     $(".color_button").click(function() { toggleColorMode(); });
-    $("#color_apply_button").click(function() { applyColorProperties(); });
+    $("#color_apply_button").click(function() { applyColorPropertiesStart(); });
 });
