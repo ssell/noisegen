@@ -324,7 +324,6 @@ function buildColorProperties() {
 }
 
 $(document).ready(function() {
-
     gSurface = new Surface();
 
     buildColorProperties();
