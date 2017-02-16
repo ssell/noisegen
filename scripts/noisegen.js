@@ -163,20 +163,6 @@ function triggerExport() {
 }
 
 /**
- * Generates the noise image.
- */
-function generateStart() {
-
-    NoiseProgressBar.start(gSurface.size());
-
-    toggleGenerateButton();
-    var noiseParams = buildNoiseParamsList();
-
-    updateDimensions();
-    generateNoiseMultithreaded(gSurface, getSelectedAlgorithm(), getNormalized(), noiseParams, 2, generateStop);
-}
-
-/**
  *
  */
 function triggerUIRebuild() {
@@ -250,7 +236,7 @@ function generateStop() {
  */
 function generateStart() {
 
-    NoiseProgressBar.start(gSurface.size());
+    NoiseProgressBar.start(gSurface.size(), "Generating ...");
 
     toggleGenerateButton();
     toggleApplyButton();
@@ -285,7 +271,7 @@ function applyColorPropertiesStart() {
 
     gSurface.setPalette(descriptor, gSurface.gray);
 
-    NoiseProgressBar.start(gSurface.size());
+    NoiseProgressBar.start(gSurface.size(), "Applying Palette ...");
 
     toggleApplyButton();
     toggleGenerateButton();

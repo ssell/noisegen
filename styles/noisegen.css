@@ -85,6 +85,19 @@ label
     background-color: #6EFC8A;
 }
 
+#progress_bar_title 
+{
+    position: absolute;
+    z-index: 1;
+    text-align: center;
+    width: 100%;
+    margin-top: -7px;
+
+    color: #FFFFFF;
+    text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;  
+
+}
+
 .ui_category
 {
     width: 330px;

@@ -26,13 +26,18 @@ class NoiseProgressBar {
 
     }
 
-    static start(total) {
+    static start(total, title) {
         NoiseProgressBar.startTime = performance.now();
         NoiseProgressBar.total     = total;
         NoiseProgressBar.current   = 0;
 
         $("#progress_bar").show();
         $("#progress_bar").css("width", "0%");
+
+        if(title) {
+            $("#progress_bar_title").text(title);
+            console.log("title: " + title);
+        }
     }
 
     static stop() {
@@ -40,12 +45,17 @@ class NoiseProgressBar {
 
         $("#progress_bar").hide();
         $("#progress_bar").css("width", "0%");
+        $("#progress_bar_title").text("");
     }
 
     static update(increment) {
         NoiseProgressBar.current += increment;
         var progress = ((NoiseProgressBar.current) / (NoiseProgressBar.total)) * 100.0;
         $("#progress_bar").css("width", progress + "%");
+    }
+
+    static setTitle(title) {
+        $("#progress_bar_title").text(title);
     }
 
     static elapsed() { 
