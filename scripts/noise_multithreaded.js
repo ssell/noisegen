@@ -73,72 +73,10 @@ function putRawData(sourceRaw, destRaw, width, startX, endX, startY, endY) {
 /**
  * 
  */
-function fillImage(raw, image) {
-    var value = 0;
-
-    for(var i = 0; i < image.data.length; i += 4) {
-        value = raw[(i * 0.25)];
-
-        image.data[i + 0] = value;
-        image.data[i + 1] = value;
-        image.data[i + 2] = value;
-        image.data[i + 3] = 255;
-    }
-}
-
-/**
- * 
- */
-function normalizeData(raw) {
-
-    var min = Infinity;
-    var max = -Infinity;
-
-    var pos = raw.length;
-
-    while(pos--) {
-        if(min > raw[pos]) {
-            min = raw[pos];
-        }
-
-        if(max < raw[pos]) {
-            max = raw[pos];
-        }
-    }
-
-    const range = (max - min);
-    const rangeReciprocal = (1 / range);
-
-    pos = raw.length;
-
-    while(pos--) {
-        raw[pos] = ((raw[pos] - min) * rangeReciprocal) * 255;
-    }
-}
-
-/**
- * 
- */
-function rawToImage(raw, image) {
-    for(var imgPos = 0, rawPos = 0; imgPos < image.data.length; imgPos += 4, ++rawPos) {
-        image.data[imgPos + 0] = raw[rawPos];
-        image.data[imgPos + 1] = raw[rawPos];
-        image.data[imgPos + 2] = raw[rawPos];
-        image.data[imgPos + 3] = 255;
-    }
-}
-
-/**
- * 
- */
 function triggerNormalizedWorkers(surface, image, noise, params, numWorkersSide, width, height, widthStep, heightStep, endCallback) {
 
-    var rawData = [];
     var length  = width * height;
-
-    while(length--) {
-        rawData.push(0);
-    }
+    var rawData = new Array(length);
 
     var numWorkersComplete = 0;
 
@@ -154,7 +92,7 @@ function triggerNormalizedWorkers(surface, image, noise, params, numWorkersSide,
             var startY = (y * heightStep);
             var endY   = ((y + 1) * heightStep);
 
-            worker.postMessage({isRaw: true, rawData: rawData, noise: noise, noiseParams: params, width: width, height: height, startX: startX, endX: endX, startY: startY, endY: endY});
+            worker.postMessage({ isRaw: true, rawData: rawData, noise: noise, noiseParams: params, width: width, height: height, startX: startX, endX: endX, startY: startY, endY: endY});
 
             worker.onmessage = function(e) {
                 if(e.data.progress) {
@@ -162,20 +100,22 @@ function triggerNormalizedWorkers(surface, image, noise, params, numWorkersSide,
                 } else {
 
                     putRawData(e.data.rawData, rawData, width, e.data.startX, e.data.endX, e.data.startY, e.data.endY);
-
                     numWorkersComplete++;
 
                     if(numWorkersComplete == (numWorkersSide * numWorkersSide)) {
 
                         NoiseProgressBar.setTitle("Normalizing Data ...");
 
-                        normalizeData(rawData);
-                        rawToImage(rawData, image);
+                        var normWorker = new Worker("scripts/noise_normalization.js");
 
-                        surface.drawImage(image);
-                        surface.updateRawImageData();
+                        normWorker.postMessage({ raw: rawData, image: image });
 
-                        endCallback();
+                        normWorker.onmessage = function(e) {
+                            surface.drawImage(e.data.image);
+                            surface.updateRawImageData();
+
+                            endCallback();
+                        };
                     }
                 }
             };
