@@ -1,8 +1,12 @@
 # noisegen
 
-**Stable:** [http://www.noisegen.io](http://www.noisegen.io/)
+For the most recent **stable** release, visit:
 
-**Latest:** [http://nightly.noisegen.io](http://nightly.noisegen.io/)
+[http://www.noisegen.io](http://www.noisegen.io/)
+
+For the cutting-edge, which may be incomplete or unstable, visit:
+
+[http://nightly.noisegen.io](http://nightly.noisegen.io/)
 
 ## Overview
 
