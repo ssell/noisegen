@@ -8,6 +8,12 @@ body
     overflow: hidden;
 }
 
+a 
+{
+    text-decoration: none;
+    color: #6DE9F9;
+}
+
 label 
 {
     display: block;
