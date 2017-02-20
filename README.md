@@ -1,6 +1,8 @@
 # noisegen
 
-**note: noisegen is currently under development and is not publicly available.**
+**Stable:** [http://www.noisegen.io](http://www.noisegen.io/)
+
+**Latest:** [http://nightly.noisegen.io](http://nightly.noisegen.io/)
 
 ## Overview
 
