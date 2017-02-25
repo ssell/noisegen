@@ -102,6 +102,44 @@ function dot2(a, b) {
     return ((a[0] * b[0]) + (a[1] * b[1]));
 }
 
+/**
+ * Implementation of the Polar From of the Box-Muller Transform.
+ * 
+ * Generates normally distributed random values from a source 
+ * of uniformly distributed values.
+ * 
+ * \param[in] rng Random implementation to generate values with.
+ */
+function gaussianRand(rng) {
+    this.generate = true;
+    this.value0   = 0.0;
+    this.value1   = 0.0;
+
+    var result = this.value1;
+
+    if(this.generate) {
+        var x0 = 0.0;
+        var x1 = 0.0;
+        var w  = 0.0;
+
+        do {
+            x0 = 2.0 * rng.next() - 1.0;
+            x1 = 2.0 * rng.next() - 1.0;
+            w  = (x0 * x0) + (x1 * x1);
+        } while(w >= 1.0);
+
+        w = Math.sqrt((-2.0 * Math.log(w)) / w);
+
+        this.value0 = x0 * w;
+        this.value1 = x1 * w;
+
+        result = this.value0;
+    }
+
+    this.generate = !this.generate;
+    return result;
+}
+
 
 //------------------------------------------------------------------------------------------
 // Random 
@@ -115,24 +153,43 @@ function dot2(a, b) {
 class Random {
     constructor() {
         this.seed = 0;
+        this.max  = 1;
     }
 
+    /**
+     * Sets the seed of the generator. The exact effect this has varies by implementation.
+     */
     setSeed(value) {
         this.seed = value;
     }
 
+    /**
+     * Returns the next unbound value. The type and range is implementation dependent.
+     */
     nextUnbound() {
         return 0;
     }
 
+    /**
+     * Returns the next unsigned integer value on the range [min, max].
+     */
     next(min, max) {
-        var value = this.nextUnbound();
-        return (mod(value, (max - min)) + min);
+        const value = this.nextUnbound();
+        return (min + uint32((value * Random.maxRecip) * (max - min)));
+    }
+
+    /**
+     * Returns the next floating-point value on the range [0, 1].
+     */
+    nextf() {
+        const value = this.nextUnbound();
+        return (value * Random.maxRecip);
     }
 }
 
-Random.phi = 1.618033988749895;
-
+Random.phi      = 1.618033988749895;
+Random.max      = 4294967296.0;
+Random.maxRecip = 1.0 / (Random.max + 1.0);
 
 //------------------------------------------------------------------------------------------
 // PRNG - XorShift32
@@ -196,7 +253,7 @@ class RandomXorShift128 extends Random {
         super();
 
         this.stateShift = [0, 239006280, 397831840, 88675123];
-        this.state = [0, 0, 0, 0];
+        this.state      = [0, 0, 0, 0];
     }
 
     setSeed(value) {
@@ -325,7 +382,7 @@ class RandomCMWC131104 extends Random {
 
         var temp = 18782 * this.qarray[this.i] + this.c;
         this.c = temp >> 32;
-        this.qarray[this.i] = (4294967294 - temp) | 0;
+        this.qarray[this.i] = uint32(4294967294 - temp);
 
         return this.qarray[this.i];
     }
@@ -598,14 +655,15 @@ class NoiseRandom extends Noise {
             switch(param) {
             case "prng":
                 this.prng = CreateRandom(value);
+                result = true;
                 break;
 
             case "seed":
                 this.setSeed(Number(value));
+                result = true;
                 break;
 
             default:
-                result = true;
                 break;
             }
         }
@@ -692,18 +750,20 @@ class NoisePerlin extends Noise {
             switch(param) {
             case "octaves":
                 this.octaves = Number(value);
+                result = true;
                 break;
 
             case "persistence":
                 this.persistence = Number(value);
+                result = true;
                 break;
 
             case "scale":
                 this.scale = Number(value);
+                result = true;
                 break;
 
             default:
-                result = true;
                 break;
             }
         }
@@ -844,18 +904,20 @@ class NoiseSimplex extends Noise {
             switch(param) {
             case "octaves":
                 this.octaves = Number(value);
+                result = true;
                 break;
 
             case "persistence":
                 this.persistence = Number(value);
+                result = true;
                 break;
 
             case "scale":
                 this.scale = Number(value);
+                result = true;
                 break;
 
             default:
-                result = true;
                 break;
             }
         }
@@ -974,7 +1036,7 @@ class NoiseSimplex extends Noise {
         return (this.getValue(x + this.seed, y + this.seed));
     }
 
-    getPixel(x, y) {
+    getPixel(x, y) {                        // override
         return ((this.getPixelRaw(x, y) + 1.0) * 0.5) * 255; // Simplex noise generates values on the range of [-1.0, 1.0] but for our pixels we require a color on the range [0, 255]
     }
 }
@@ -1031,6 +1093,77 @@ NoiseSimplex.simplex = [
 
 
 //-----------------------------------------------------------------------------------------
+// NoiseWorley
+//-----------------------------------------------------------------------------------------
+
+
+/**
+ * \class NoiseWorley
+ * 
+ * Implementation of Worley, aka Cellular, Noise.
+ * 
+ * Worley Noise has # controlling variables:
+ * 
+ *      - Splits -
+ *      
+ *      The number of times to split the image. Each split results in a quadrant in which 
+ *      the feature points are generated. Every quadrant has a number of feature points 
+ *      determined by the density parameter. 
+ * 
+ *      A lower-bound of 16 pixels is enforced for each quadrant dimension. This results 
+ *      in a minimum quadrant area of 256 pixels which is sufficient for all reasonable densities.
+ * 
+ *      - Density -
+ * 
+ *      The density determines the number of feature points placed within each quadrant. 
+ *      
+ */
+class NoiseWorley extends Noise {
+    constructor() {
+        super();
+
+        this.splits = 4;
+        this.density = 4;
+    }
+
+    setParam(param, value) {
+        var result = super.setParam(param, value);
+
+        if(!result) {
+            switch(param) {
+            default:
+                break;
+            }
+        }
+
+        return result;
+    }
+
+    static getParams() {
+        super.getParams();
+        return "";
+    }
+
+    
+
+    getValue(x, y) {
+
+    }
+
+    getPixelRaw(x, y) {
+        super.getPixelRaw(x, y);
+        return this.getValue(x, y);
+    }
+
+    getPixel(x, y) {
+        return this.getPixelRaw(x, y);
+    }
+}
+
+NoiseWorley.type = "Worley";
+
+
+//-----------------------------------------------------------------------------------------
 // Noise Factory
 //-----------------------------------------------------------------------------------------
 
@@ -1049,6 +1182,10 @@ function createNoise(type) {
 
     case NoiseSimplex.type:
         result = new NoiseSimplex();
+        break;
+
+    case NoiseWorley.type:
+        result = new NoiseWorley();
         break;
 
     default:
@@ -1072,6 +1209,10 @@ function getUIParams(type) {
 
     case NoiseSimplex.type:
         result = NoiseSimplex.getParams();
+        break;
+
+    case NoiseWorley.type:
+        result = NoiseWorley.getParams();
         break;
 
     default:
