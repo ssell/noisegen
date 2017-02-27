@@ -55,7 +55,14 @@ function toTitleCase(str)
 
 
 function buildTitle(title, value, valuehidden) {
-    var html = "<div class='ui_holder ui_title'>" + toTitleCase(title) + ": ";
+    var html = "<div class='ui_holder ui_title'>"
+    var splits = title.split("_");
+
+    for(var i = 0; i < splits.length; ++i) {
+        html += toTitleCase(splits[i]) + " ";
+    }
+
+    html += ": ";
 
     if(valuehidden) {
         html += "<div id='" + title + "_value' class='noise_property_value' style='display:none;'>" + value + "</div></div>";

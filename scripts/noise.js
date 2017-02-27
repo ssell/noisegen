@@ -108,6 +108,10 @@ function dot2(a, b) {
  * Generates normally distributed random values from a source 
  * of uniformly distributed values.
  * 
+ * The values generated have a mean of 0 with a standard deviation of 1.
+ * Over 99% of random values will be +/- 3 standard deviation from the
+ * mean, but the theoretical minimum/maximum is [-INF, +INF].
+ * 
  * \param[in] rng Random implementation to generate values with.
  */
 function gaussianRand(rng) {
@@ -123,8 +127,10 @@ function gaussianRand(rng) {
         var w  = 0.0;
 
         do {
-            x0 = 2.0 * rng.next() - 1.0;
-            x1 = 2.0 * rng.next() - 1.0;
+            // Note: Our rng.nextf() gives a value on the range [0, 1],
+            // but the Polar Form expects a value on the range [-1, 1].
+            x0 = (2.0 * rng.nextf()) - 1.0;
+            x1 = (2.0 * rng.nextf()) - 1.0;
             w  = (x0 * x0) + (x1 * x1);
         } while(w >= 1.0);
 
@@ -138,6 +144,48 @@ function gaussianRand(rng) {
 
     this.generate = !this.generate;
     return result;
+}
+
+/**
+ * Generates a normally distributed random value with the 
+ * specified mean and standard deviation. 
+ * 
+ * 99% of values will fall within +/- standard deviations 
+ * of the mean, but the theoretical range is [-INF, INF].
+ * 
+ * Example:
+ * 
+ *                mean: 5 
+ *              stddev: 2
+ *     practical range: (-1, 11)
+ *          true range: [-INF, INF]
+ */
+function gaussianRandAdjusted(rng, mean, stddev) {
+    const value = gaussianRand(rng);
+    return ((value * stddev) + mean);
+}
+
+/**
+ * Returns the relative neighboring pixel based on the current step iteration.
+ */
+function radiusSample(step) {
+    var result = {x: 0, y: 0};
+
+    if(step) {
+        const radius      = (((Math.sqrt(step) - 1) * 0.5) | 0) + 1;
+        const radiusStart = ((4 * (radius * radius)) - (4 * radius)) + 1;
+        const angleStep   = (2.0 * Math.PI) / (radius * 8);
+        const angle       = (step - radiusStart) * angleStep;
+
+        result.x = radius * Math.cos(angle);
+        result.y = radius * Math.sin(angle);
+    }
+
+    return result;
+}
+
+function cantorPair(x, y) {
+    return ((x + y) * (x + y + 1) / 2) + y;
 }
 
 
@@ -1101,29 +1149,20 @@ NoiseSimplex.simplex = [
  * \class NoiseWorley
  * 
  * Implementation of Worley, aka Cellular, Noise.
- * 
- * Worley Noise has # controlling variables:
- * 
- *      - Splits -
- *      
- *      The number of times to split the image. Each split results in a quadrant in which 
- *      the feature points are generated. Every quadrant has a number of feature points 
- *      determined by the density parameter. 
- * 
- *      A lower-bound of 16 pixels is enforced for each quadrant dimension. This results 
- *      in a minimum quadrant area of 256 pixels which is sufficient for all reasonable densities.
- * 
- *      - Density -
- * 
- *      The density determines the number of feature points placed within each quadrant. 
- *      
  */
 class NoiseWorley extends Noise {
     constructor() {
         super();
 
-        this.splits = 4;
-        this.density = 4;
+        this.regionDimensions = 16;
+        this.dimensionRecip   = 1 / 16;
+        this.densityMean      = 3;
+        this.densityStdDev    = 3;
+        this.nClosestPoints   = 3;
+        this.prng             = CreateRandom(RandomXorShift128.type);
+        this.distances        = null;
+        this.currPos          = { x: 0.0, y: 0.0 };
+        this.seed             = 1337;
     }
 
     setParam(param, value) {
@@ -1131,6 +1170,27 @@ class NoiseWorley extends Noise {
 
         if(!result) {
             switch(param) {
+            case "region_dimensions":
+                this.regionDimensions = Number(value);
+                this.dimensionRecip  = 1 / this.regionDimensions;
+                result = true;
+                break;
+
+            case "density_mean":
+                this.densityMean = Number(value);
+                result = true;
+                break;
+
+            case "density_deviations":
+                this.densityStdDev = Number(value);
+                result = true;
+                break;
+
+            case "n_closest_points":
+                this.nClosestPoints = Number(value);
+                result = true;
+                break;
+
             default:
                 break;
             }
@@ -1141,13 +1201,108 @@ class NoiseWorley extends Noise {
 
     static getParams() {
         super.getParams();
-        return "";
+        return "region_dimensions:int_range 8 256 16;n_closest_points:int_range 1 10 3;density_mean:int_range 1 10 3;density_deviations:int_range 1 5 3;seed:number 1337;";
     }
 
-    
+    getNumFeaturePoints() {
+        const numPoints = gaussianRandAdjusted(this.prng, this.densityMean, this.densityStdDev);
+        return clamp(numPoints, 0, (this.densityMean + (3 * this.densityStdDev))) | 0;
+    }
+
+    getFeaturePoint(x, y) {
+        const pointX = (x * this.regionDimensions) + (this.prng.nextf() * this.regionDimensions);
+        const pointY = (y * this.regionDimensions) + (this.prng.nextf() * this.regionDimensions);
+
+        return { x: pointX, y: pointY};
+    }
+
+    /**
+     * Calculates the squared distance between the point and the position being queried.
+     * 
+     * It then inserts the distance into the `distances` array if it is less than one 
+     * of the pre-existing feature point distances.
+     */
+    insertFeaturePoint(point) {
+        const toVector = { x: (point.x - this.currPos.x), y: (point.y - this.currPos.y) };
+        const distSquared = (toVector.x * toVector.x) + (toVector.y * toVector.y);
+
+        for(var i = 0; i < this.distances.length; ++i) {
+            if(distSquared < this.distances[i]) {
+                this.distances[i] = distSquared;
+                break;
+            }
+        }
+    }
+
+    /**
+     * Feature points are generated for the specified region of (x, y).
+     * 
+     * If a feature point lies closer to the queried position, then it's 
+     * distance is inserted into the 'distances' array. 
+     */
+    getClosestPoints(x, y) {
+        const numFeaturePoints = this.getNumFeaturePoints();
+        
+        for(var i = 0; i < numFeaturePoints; ++i) {
+            var feature = this.getFeaturePoint(x, y);
+
+            this.insertFeaturePoint(feature);
+        }
+    }
+
+    /**
+     * Recreates the `distances` array which stores the n closest 
+     * distances to the current position.
+     */
+    recreateDistances() {
+        this.distances = new Array(this.nClosestPoints);
+
+        for(var i = 0; i < this.nClosestPoints; ++i) { 
+            this.distances[i] = Infinity;
+        }
+    }
+
+    keepGenerating() {
+        var result = true;
+
+        return result;
+    }
+
+    getDistanceValue() {
+        var result = this.distances[this.distances.length - 1];
+
+        for(var i = 0; i < (this.distances.length - 2); ++i) {
+            result -= this.distances[i];
+        }
+        
+        return result;
+    }
 
     getValue(x, y) {
+        this.currPos = {x: x, y: y};
 
+        const regionX = (x * this.dimensionRecip) | 0;
+        const regionY = (y * this.dimensionRecip) | 0;
+        
+        this.recreateDistances();
+
+        var relativeX = 0;
+        var relativeY = 0;
+        var step      = 0;
+
+        while(step < 21) {
+            var offset = radiusSample(step++);
+            
+            relativeX = (regionX + offset.x) | 0;
+            relativeY = (regionY + offset.y) | 0;
+
+            var seed = cantorPair(relativeX, relativeY);
+            this.prng.setSeed(seed);
+
+            this.getClosestPoints(relativeX, relativeY);
+        }
+
+        return this.getDistanceValue();
     }
 
     getPixelRaw(x, y) {

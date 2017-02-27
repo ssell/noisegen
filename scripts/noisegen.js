@@ -65,8 +65,7 @@ function buildNoiseParamsList() {
 
     $("#noise_properties .noise_property_value").each(function() {
         var id    = $(this).attr('id');
-        var temp  = id.split("_");
-        var name  = temp[0];
+        var name  = id.substr(0, (id.length - 6));    // Remove the '_value'
         var value = "";
         
         if($(this).is("input")) {
