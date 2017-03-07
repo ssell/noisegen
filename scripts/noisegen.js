@@ -124,11 +124,15 @@ function updateDimensions() {
  * This is used by different ui elements such as the range sliders.
  */
 function updateInput(id) {
-    var obj = $("#" + id);
+    var sourceObj = $("#" + id);
+    var destObj   = $("#" + id + "_value");
 
-    if(obj) {
-        var newVal = obj.val();
-        $("#" + id + "_value").val(newVal);
+    if(sourceObj && destObj) {
+        if(destObj.is("input")) {
+            destObj.val(sourceObj.val());
+        } else {
+            destObj.html(sourceObj.val());
+        }
     }
 }
 

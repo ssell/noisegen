@@ -52,8 +52,6 @@ function toTitleCase(str)
  * \param[in] value       Default value of the input below the title.
  * \param[in] valueHidden If true, the value of the input will not be displayed next to the title.
  */
-
-
 function buildTitle(title, value, valuehidden) {
     var html = "<div class='ui_holder ui_title'>"
     var splits = title.split("_");
