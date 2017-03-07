@@ -184,10 +184,16 @@ function radiusSample(step) {
     return result;
 }
 
+/**
+ * Signed Cantor Pair.
+ * Returns a single value for a coordinate pair. Indices are bijective.
+ */
 function cantorPair(x, y) {
-    return ((x + y) * (x + y + 1) / 2) + y;
-}
+    const a = (x >= 0.0) ? 2.0 * x : (-2.0 * x) - 1.0;
+    const b = (y >= 0.0) ? 2.0 * y : (-2.0 * y) - 1.0;
 
+    return ((a + b) * (a + b + 1) * 0.5) + b;
+}
 
 //------------------------------------------------------------------------------------------
 // Random 
@@ -1161,7 +1167,8 @@ class NoiseWorley extends Noise {
         this.nClosestPoints   = 3;
         this.prng             = CreateRandom(RandomXorShift128.type);
         this.distances        = null;
-        this.currPos          = { x: 0.0, y: 0.0 };
+        this.currX            = 0.0;
+        this.currY            = 0.0;
         this.seed             = 1337;
     }
 
@@ -1204,105 +1211,80 @@ class NoiseWorley extends Noise {
         return "region_dimensions:int_range 8 256 16;n_closest_points:int_range 1 10 3;density_mean:int_range 1 10 3;density_deviations:int_range 1 5 3;seed:number 1337;";
     }
 
-    getNumFeaturePoints() {
-        const numPoints = gaussianRandAdjusted(this.prng, this.densityMean, this.densityStdDev);
-        return clamp(numPoints, 0, (this.densityMean + (3 * this.densityStdDev))) | 0;
-    }
+    insertDistance(distance) {
+        var index = 0;
 
-    getFeaturePoint(x, y) {
-        const pointX = (x * this.regionDimensions) + (this.prng.nextf() * this.regionDimensions);
-        const pointY = (y * this.regionDimensions) + (this.prng.nextf() * this.regionDimensions);
-
-        return { x: pointX, y: pointY};
-    }
-
-    /**
-     * Calculates the squared distance between the point and the position being queried.
-     * 
-     * It then inserts the distance into the `distances` array if it is less than one 
-     * of the pre-existing feature point distances.
-     */
-    insertFeaturePoint(point) {
-        const toVector = { x: (point.x - this.currPos.x), y: (point.y - this.currPos.y) };
-        const distSquared = (toVector.x * toVector.x) + (toVector.y * toVector.y);
-
-        for(var i = 0; i < this.distances.length; ++i) {
-            if(distSquared < this.distances[i]) {
-                this.distances[i] = distSquared;
+        for( ; index < this.nClosestPoints; ++index) {
+            if(distance < this.distances[index]) {
                 break;
             }
         }
-    }
 
-    /**
-     * Feature points are generated for the specified region of (x, y).
-     * 
-     * If a feature point lies closer to the queried position, then it's 
-     * distance is inserted into the 'distances' array. 
-     */
-    getClosestPoints(x, y) {
-        const numFeaturePoints = this.getNumFeaturePoints();
-        
-        for(var i = 0; i < numFeaturePoints; ++i) {
-            var feature = this.getFeaturePoint(x, y);
-
-            this.insertFeaturePoint(feature);
+        if(index < this.nClosestPoints) {
+            this.distances.splice(index, 0, distance);
+            this.distances.pop();
         }
     }
 
-    /**
-     * Recreates the `distances` array which stores the n closest 
-     * distances to the current position.
-     */
-    recreateDistances() {
+    checkRegion(regionX, regionY) {
+        const regionIndex = cantorPair(regionX, regionY);
+        this.prng.setSeed(regionIndex);
+
+        // Generate the feature points 
+
+        const numFeaturePoints = gaussianRandAdjusted(this.prng, this.densityMean, this.densityStdDev);
+
+        for(var i = 0; i < numFeaturePoints; ++i) {
+            const featureX = regionX + (this.prng.nextf() * this.regionDimensions);
+            const featureY = regionY + (this.prng.nextf() * this.regionDimensions);
+
+            const distToFeature = (this.currX * featureX) + (this.currY * featureY);    // Squared distance 
+
+            this.insertDistance(distToFeature);
+        }
+    }
+
+    keepChecking(step) {
+        var result = true;
+
+        if(this.distances[(this.nClosestPoints - 1)] < Infinity) {
+            result = false;
+        }
+
+        return result;
+    }
+
+    resetDistances() {
         this.distances = new Array(this.nClosestPoints);
 
-        for(var i = 0; i < this.nClosestPoints; ++i) { 
+        for(var i = 0; i < this.nClosestPoints; ++i) {
             this.distances[i] = Infinity;
         }
     }
 
-    keepGenerating() {
-        var result = true;
-
-        return result;
-    }
-
-    getDistanceValue() {
-        var result = this.distances[this.distances.length - 1];
-
-        for(var i = 0; i < (this.distances.length - 2); ++i) {
-            result -= this.distances[i];
-        }
-        
-        return result;
-    }
-
     getValue(x, y) {
-        this.currPos = {x: x, y: y};
+        this.currX = x;
+        this.currY = y;
 
-        const regionX = (x * this.dimensionRecip) | 0;
-        const regionY = (y * this.dimensionRecip) | 0;
+        this.resetDistances();
         
-        this.recreateDistances();
+        const regionX = (x / this.regionDimensions) | 0;
+        const regionY = (y / this.regionDimensions) | 0;
 
-        var relativeX = 0;
-        var relativeY = 0;
-        var step      = 0;
+        var step   = 0;
+        var checkX = regionX;
+        var checkY = regionY;
 
-        while(step < 21) {
-            var offset = radiusSample(step++);
-            
-            relativeX = (regionX + offset.x) | 0;
-            relativeY = (regionY + offset.y) | 0;
+        while(this.keepChecking(step)) {
+            this.checkRegion(checkX, checkY);
 
-            var seed = cantorPair(relativeX, relativeY);
-            this.prng.setSeed(seed);
+            const nextCheck = radiusSample(step++);
 
-            this.getClosestPoints(relativeX, relativeY);
+            checkX = (regionX + nextCheck.x) | 0;
+            checkY = (regionY + nextCheck.y) | 0;
         }
 
-        return this.getDistanceValue();
+        return this.distances[0];
     }
 
     getPixelRaw(x, y) {
