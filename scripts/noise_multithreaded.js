@@ -110,6 +110,9 @@ function triggerNormalizedWorkers(surface, image, noise, params, numWorkersSide,
     var length  = width * height;
     var rawData = new Array(length);
 
+    //runNoiseSingleDebug(rawData, noise, params, width, height);
+    //return;
+
     var numWorkersComplete = 0;
 
     var min = Infinity;

@@ -28,7 +28,6 @@
 // Math Utilities
 //-----------------------------------------------------------------------------------------
 
-
 /** 
  * Clamps the specified value to the minimum and maximum.
  */
@@ -185,6 +184,13 @@ function radiusSample(step) {
 }
 
 /**
+ * Returns the radius that the current sample is in.
+ */
+function radiusSampleRadius(step) {
+    return (((Math.sqrt(step) - 1) * 0.5) | 0) + 1;
+}
+
+/**
  * Signed Cantor Pair.
  * Returns a single value for a coordinate pair. Indices are bijective.
  */
@@ -214,7 +220,7 @@ class Random {
      * Sets the seed of the generator. The exact effect this has varies by implementation.
      */
     setSeed(value) {
-        this.seed = value;
+        this.seed = uint32(value);
     }
 
     /**
@@ -492,7 +498,6 @@ class Noise {
 
         this.params = "";
         this.seed   = 0;
-        this.gray   = true;
         this.width  = 0;           // Width of the active image data (in pixels)
         this.height = 0;           // Height of the active image data (in pixels)
         this.length = 0;           // Total length of the active image data (in bytes [4 bytes per pixel])
@@ -509,8 +514,8 @@ class Noise {
         var result = true;
 
         switch(param) {
-        case "gray":
-            this.gray = (value == "true");
+        case "seed":
+            this.seed = Number(value);
             break;
 
         default:
@@ -1165,7 +1170,7 @@ class NoiseWorley extends Noise {
         this.densityMean      = 3;
         this.densityStdDev    = 3;
         this.nClosestPoints   = 3;
-        this.prng             = CreateRandom(RandomXorShift128.type);
+        this.prng             = CreateRandom(RandomXorShift32.type);
         this.distances        = null;
         this.currX            = 0.0;
         this.currY            = 0.0;
@@ -1208,54 +1213,101 @@ class NoiseWorley extends Noise {
 
     static getParams() {
         super.getParams();
-        return "region_dimensions:int_range 8 256 16;n_closest_points:int_range 1 10 3;density_mean:int_range 1 10 3;density_deviations:int_range 1 5 3;seed:number 1337;";
+        return "region_dimensions:int_range 64 256 128;n_closest_points:int_range 1 5 1;density_mean:int_range 1 10 3;density_deviations:int_range 1 5 1;seed:number 1337;";
     }
 
     insertDistance(distance) {
         var index = 0;
 
         for( ; index < this.nClosestPoints; ++index) {
+            if((this.distances[index] < Infinity) && 
+               (Math.abs(distance - this.distances[index]) < 0.01)) {
+                return;
+            }
             if(distance < this.distances[index]) {
                 break;
             }
         }
 
-        if(index < this.nClosestPoints) {
-            this.distances.splice(index, 0, distance);
-            this.distances.pop();
+        if(index < this.nClosestPoints) {    
+            for(var i = (this.nClosestPoints - 1); i > index; --i) {
+                this.distances[i] = this.distances[i - 1];
+            }
+
+            this.distances[index] = distance;
         }
+    }
+
+    adjust(x) {
+        const epsilon = 0.0001;
+        const intX = x | 0;
+        
+        var result = 0.0;
+        
+        if(x > 0.0) {
+            if((x - intX) > epsilon) {
+                result = Math.ceil(x);
+            } else {
+                result = intX;
+            }
+        } else if(x < 0.0) {
+            if((x - intX) < -epsilon) {
+                result = Math.floor(x);
+            } else {
+                result = intX;
+            }
+        }
+        
+        return result;
     }
 
     checkRegion(regionX, regionY) {
         const regionIndex = cantorPair(regionX, regionY);
-        this.prng.setSeed(regionIndex);
+        this.prng.setSeed(this.seed + regionIndex);
 
         // Generate the feature points 
 
         const numFeaturePoints = gaussianRandAdjusted(this.prng, this.densityMean, this.densityStdDev);
 
         for(var i = 0; i < numFeaturePoints; ++i) {
-            const featureX = regionX + (this.prng.nextf() * this.regionDimensions);
-            const featureY = regionY + (this.prng.nextf() * this.regionDimensions);
+            const featureX = (regionX * this.regionDimensions) + (this.prng.nextf() * this.regionDimensions);
+            const featureY = (regionY * this.regionDimensions) + (this.prng.nextf() * this.regionDimensions);
 
-            const distToFeature = (this.currX * featureX) + (this.currY * featureY);    // Squared distance 
+            const vecToCurr = {x: (featureX - this.currX), y: (featureY - this.currY) };
+            const vecLength = (vecToCurr.x * vecToCurr.x) + (vecToCurr.y * vecToCurr.y);    // Squared distance 
 
-            this.insertDistance(distToFeature);
+            this.insertDistance(vecLength);
         }
     }
 
     keepChecking(step) {
         var result = true;
 
-        if(this.distances[(this.nClosestPoints - 1)] < Infinity) {
-            result = false;
+        const furthestNearFeature = this.distances[(this.nClosestPoints - 1)];
+
+        if(furthestNearFeature < Infinity) {
+            // Keep checking until the current sample radius exceeds our furthest near feature point.
+            // Remember that feature distances are the squared values.
+            var prevRadius = radiusSampleRadius(step - 1) - 1;
+            var currRadius = radiusSampleRadius(step) - 1;
+
+            if(prevRadius != currRadius) {
+                prevRadius = prevRadius * this.regionDimensions;
+
+                if((furthestNearFeature) < (prevRadius * prevRadius))
+                {
+                    result = false;
+                }
+            }
         }
 
         return result;
     }
 
     resetDistances() {
-        this.distances = new Array(this.nClosestPoints);
+        if((!this.distances) || (this.distances.length != this.nClosestPoints)) {
+            this.distances = new Array(this.nClosestPoints);
+        }
 
         for(var i = 0; i < this.nClosestPoints; ++i) {
             this.distances[i] = Infinity;
@@ -1275,16 +1327,16 @@ class NoiseWorley extends Noise {
         var checkX = regionX;
         var checkY = regionY;
 
-        while(this.keepChecking(step)) {
+        do {
             this.checkRegion(checkX, checkY);
 
             const nextCheck = radiusSample(step++);
 
-            checkX = (regionX + nextCheck.x) | 0;
-            checkY = (regionY + nextCheck.y) | 0;
-        }
+            checkX = regionX + this.adjust(nextCheck.x);
+            checkY = regionY + this.adjust(nextCheck.y);
+        } while(this.keepChecking(step));
 
-        return this.distances[0];
+        return this.distances[this.nClosestPoints - 1];
     }
 
     getPixelRaw(x, y) {
@@ -1363,6 +1415,17 @@ function getUIParams(type) {
 //------------------------------------------------------------------------------------------
 // Multi-threaded Message
 //------------------------------------------------------------------------------------------
+
+function runNoiseSingleDebug(rawData, noise, params, width, height) {
+    var noise = createNoise(noise);
+
+    noise.setParams(params);
+    noise.width  = width;
+    noise.height = height;
+    noise.length = (width * height);
+
+    noise.generateRaw(rawData, 0, width, 0, height);
+}
 
 self.onmessage = function(e) {
     var data = e.data;

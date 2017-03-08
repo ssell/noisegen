@@ -6,7 +6,8 @@
             "type": "chrome",
             "request": "launch",
             "sourceMaps": false,
-            "file": "${workspaceRoot}/index.html"
+            "file": "${workspaceRoot}/index.html",
+            "runtimeArgs": ["--allow-file-access-from-files"]
         }
     ]
 }
