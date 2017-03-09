@@ -208,7 +208,7 @@ class UIMultiRangeSegmentEditor {
         $("#multirange_segment_editor_color").change(function(e) {
             const color = $(this).spectrum("get").toHexString();
             self.segment.setColor(color);
-            
+            self.parent.update();
         });
 
         $("#multirange_segment_editor_mode").change(function(e) {
@@ -552,11 +552,16 @@ class UIMultiRange {
     onThumbUpdate(thumb) {
         var index = thumb.index;
 
-        var left  = index;
-        var right = index + 1;
+        var left   = index - 1;
+        var middle = index;
+        var right  = index + 1;
 
-        this.segments[left].update();
+        this.segments[middle].update();
         this.segments[right].update();
+
+        if(left >= 0) {
+            this.segments[left].update();
+        }
 
         if(this.callback) {
             this.callback(this);
