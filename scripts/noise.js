@@ -36,12 +36,15 @@ function clamp(value, min, max) {
 }
 
 /**
- * Returns 32-bit signed integer version of x.
+ * Returns a 32-bit signed integer version of x.
  */
 function int32(x) {
     return (x | 0);
 }
 
+/**
+ * Returns a 32-bit unsigned integer version of x.
+ */
 function uint32(x) { 
     return (x >>> 0);
 }
@@ -66,10 +69,6 @@ function mod(n, m) {
  * With linear interpolation, a straight line will result from the transition between values.
  * If used to interpolate over multiple points, for example a graph, there will be no 
  * continuity between the points.
- * 
- * Adapted from original source in Ocular Engine:
- *
- *     https://github.com/ssell/OcularEngine/blob/master/OcularCore/include/Math/Interpolation.hpp
  */
 function interpolateLinear(from, to, frac) {
     var clamped = clamp(frac, 0.0, 1.0);
@@ -82,10 +81,6 @@ function interpolateLinear(from, to, frac) {
  * With cosine interpolation, a smooth curve will result from the transition between values.
  * If used to interpolate over multiple points, for example a graph, there will be no
  * continuity between the points.
- * 
- * Adapted from original source in Ocular Engine:
- *
- *     https://github.com/ssell/OcularEngine/blob/master/OcularCore/include/Math/Interpolation.hpp
  */
 function interpolateCosine(from, to, frac) {
     var clamped = clamp(frac, 0.0, 1.0);
@@ -102,7 +97,7 @@ function dot2(a, b) {
 }
 
 /**
- * Implementation of the Polar From of the Box-Muller Transform.
+ * Implementation of the Polar Form of the Box-Muller Transform.
  * 
  * Generates normally distributed random values from a source 
  * of uniformly distributed values.
@@ -166,6 +161,7 @@ function gaussianRandAdjusted(rng, mean, stddev) {
 
 /**
  * Returns the relative neighboring pixel based on the current step iteration.
+ * For more information about Radius Sampling, see: https://jsfiddle.net/ssell/b2q98e4L/
  */
 function radiusSample(step) {
     var result = {x: 0, y: 0};
@@ -193,6 +189,17 @@ function radiusSampleRadius(step) {
 /**
  * Signed Cantor Pair.
  * Returns a single value for a coordinate pair. Indices are bijective.
+ * 
+ * Note that the Cantor Pair index grows very quickly and may exceed type 
+ * limits when not expected. Example:
+ * 
+ *     cantorPair(10000, 10000) = 80,000,400,000 (requires 37 bits)
+ * 
+ * Szudzik Pairs are slightly more space-efficient:
+ * 
+ *     szudzikPair(10000, 10000) = 10,000,200,000 (requires 34 bits)
+ * 
+ * See the following for a comparison: https://jsfiddle.net/ssell/5smy3qg6/
  */
 function cantorPair(x, y) {
     const a = (x >= 0.0) ? 2.0 * x : (-2.0 * x) - 1.0;
@@ -832,7 +839,7 @@ class NoisePerlin extends Noise {
 
     static getParams() {
         super.getParams();
-        return "octaves:int_range 1 20 5;persistence:float_range 0.0 1.0 0.5;scale:float_range 0.0001 0.1 0.01;";
+        return "octaves:int_range 1 20 6;persistence:float_range 0.0 1.0 0.6;scale:float_range 0.0001 0.1 0.02;";
     }
 
     getRandom(x, y) {

@@ -38,7 +38,7 @@ var gColorMultiRange = null;
 function populateAlgorithmList() {
     $("#noise_algorithms").append(
         "<option value='" + NoisePerlin.type  + "'>" + NoisePerlin.type  + "</option>" +
-        "<option value='" + NoiseSimplex.type + "'>" + NoiseSimplex.type + "</option>" +
+        "<option value='" + NoiseSimplex.type + "' selected>" + NoiseSimplex.type + "</option>" +
         "<option value='" + NoiseWorley.type  + "'>" + NoiseWorley.type  + "</option>" +
         "<option value='" + NoiseRandom.type  + "'>" + NoiseRandom.type  + "</option>");
 }
