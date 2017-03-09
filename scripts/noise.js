@@ -522,7 +522,7 @@ class Noise {
 
         switch(param) {
         case "seed":
-            this.seed = Number(value);
+            this.setSeed(Number(value));
             break;
 
         default:
@@ -721,11 +721,6 @@ class NoiseRandom extends Noise {
             switch(param) {
             case "prng":
                 this.prng = CreateRandom(value);
-                result = true;
-                break;
-
-            case "seed":
-                this.setSeed(Number(value));
                 result = true;
                 break;
 
