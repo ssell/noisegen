@@ -172,7 +172,15 @@ function triggerExport() {
  */
 function triggerUIRebuild() {
     buildUI(getUIParams(getSelectedAlgorithm()));
-    $("#noise_properties .ui_element").change(function(){ updateInput($(this).attr('id')); });
+
+    $("#noise_properties .ui_element").change(function(){ 
+        updateInput($(this).attr('id')); 
+    });
+
+    $("#noise_properties .noise_property_value").change(function() {
+        // If the user has manually modified the noise value, update the associated .ui_element.
+        var parent = $(this).parent().parent().find(".ui_element").val($(this).val());
+    })
 }
 
 /**
