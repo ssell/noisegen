@@ -1,4 +1,4 @@
-body
+html,body
 {
     color: #AAA;
     background-color: #333;
@@ -11,7 +11,7 @@ body
 a 
 {
     text-decoration: none;
-    color: #6DE9F9;
+    color: #CCFFCC;
 }
 
 label 
@@ -38,6 +38,11 @@ label
     width: 50px;
 }
 
+#holder{
+    min-height: 100%;
+    position:relative;
+}
+
 #contents
 {
     position: absolute;
@@ -51,6 +56,36 @@ label
     height: 98%;
 
     overflow: hidden;
+}
+
+#footer
+{
+    font-size: 10px;
+    color: #777;
+
+    height: 10px; 
+    width: 100%;
+    position: absolute;
+    left: 0;
+    bottom: 0; 
+
+    text-align: center;
+}
+
+.footer_span 
+{
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+.footer_span a 
+{
+    color: #777;
+}
+
+.footer_span a:hover 
+{
+    color: #CCFFCC;
 }
 
 #surface_container
@@ -310,4 +345,35 @@ input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer
 input[type=number] 
 {
     -moz-appearance:textfield;
+}
+
+.information 
+{
+    float: right;
+    font-size: 11px;
+    color: #888;
+    cursor: pointer;
+    padding-left: 5px;
+}
+
+.information:hover 
+{
+    color: #CCFFCC;
+}
+
+.blockotext 
+{
+    width: 650px;
+    margin: 0 auto;
+    margin-top: 50px;
+}
+
+.bigtext 
+{
+    font-family: 'Roboto Condensed', sans-serif;
+    font-size: 60px;
+    font-weight: 100;
+    color: #fff;
+
+    padding-bottom: 20px;
 }

@@ -281,7 +281,7 @@ function applyColorPropertiesStart() {
     } else {
         descriptor = toPaletteDescriptor(gColorMultiRange);
     }
-
+    console.log(descriptor);
     gSurface.setPalette(descriptor, gSurface.gray);
 
     NoiseProgressBar.start(gSurface.size(), "Applying Palette ...");
@@ -322,12 +322,41 @@ function buildColorProperties() {
     buildColorPropertiesColor();
 }
 
+/**
+ * 
+ */ 
+function populateColorTemplates() {
+    var templates = [
+        ["Islands", "0,58,111,232,Solid;110,76,177,255,Solid;145,253,255,138,Solid;153,96,232,88,Solid;216,234,255,252,Solid;"],
+        ["Clouds", ""]
+    ];
+
+    var list = "";
+
+    for(var i = 0; i < templates.length; ++i)
+    {
+        list += "<option value='" + templates[i][0] + "'>" + templates[i][0] + "</option>";
+    }
+
+    $("#color_templates").append(list);
+}
+
+/**
+ * 
+ */
+function applyTemplateString()
+{
+
+}
+
 $(document).ready(function() {
     gSurface = new Surface();
 
     buildColorProperties();
 
     populateAlgorithmList();
+    populateColorTemplates();
+
     updateDimensions();
     triggerUIRebuild();
 

@@ -46,6 +46,8 @@ class NoiseProgressBar {
         $("#progress_bar").hide();
         $("#progress_bar").css("width", "0%");
         $("#progress_bar_title").text("");
+
+        console.log("Progress finished after " + (NoiseProgressBar.stopTime - NoiseProgressBar.startTime) + "ms");
     }
 
     static update(increment) {

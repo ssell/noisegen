@@ -187,25 +187,18 @@ function radiusSampleRadius(step) {
 }
 
 /**
- * Signed Cantor Pair.
  * Returns a single value for a coordinate pair. Indices are bijective.
  * 
- * Note that the Cantor Pair index grows very quickly and may exceed type 
- * limits when not expected. Example:
+ * Note that this is not the signed form. As our use of negative indices 
+ * is minimal, the irregular behavior is tolerated. Especially since the 
+ * signed form runs ~40% slower.
  * 
- *     cantorPair(10000, 10000) = 80,000,400,000 (requires 37 bits)
+ * See the following for a comparison of pairing functions: 
  * 
- * Szudzik Pairs are slightly more space-efficient:
- * 
- *     szudzikPair(10000, 10000) = 10,000,200,000 (requires 34 bits)
- * 
- * See the following for a comparison: https://jsfiddle.net/ssell/5smy3qg6/
+ *     https://jsfiddle.net/ssell/5smy3qg6/
  */
 function cantorPair(x, y) {
-    const a = (x >= 0.0) ? 2.0 * x : (-2.0 * x) - 1.0;
-    const b = (y >= 0.0) ? 2.0 * y : (-2.0 * y) - 1.0;
-
-    return ((a + b) * (a + b + 1) * 0.5) + b;
+    return ((x + y) * (x + y + 1) * 0.5) + y;
 }
 
 //------------------------------------------------------------------------------------------
@@ -988,7 +981,7 @@ class NoiseSimplex extends Noise {
 
     static getParams() {
         super.getParams();
-        return "octaves:int_range 1 20 5;persistence:float_range 0.0 1.0 0.5;scale:float_range 0.0001 0.1 0.01;"
+        return "octaves:int_range 1 20 5;persistence:float_range 0.0 1.0 0.5;scale:float_range 0.0001 0.1 0.005;"
     }
 
     getRawNoise(x, y) {
@@ -1254,7 +1247,7 @@ class NoiseWorley extends Noise {
             }
         } else if(x < 0.0) {
             if((x - intX) < -epsilon) {
-                result = Math.floor(x);
+                result = x | 0;
             } else {
                 result = intX;
             }
