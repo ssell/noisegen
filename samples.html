@@ -1,0 +1,128 @@
+<html>
+<head>
+    <title>noisegen</title>
+
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto+Condensed:300">
+    <link rel="stylesheet" href="styles/noisegen.css">
+    <link rel="stylesheet" href="styles/samples.css">
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <script src="scripts/noise_samples.js"></script>
+
+</head>
+<body>
+    <div id="holder">
+        <div id="contents" style="overflow: auto;">
+            <div class="blockotext">
+                <div class="bigtext">noisegen samples</div> 
+                
+                <br/><br/>
+
+                <span id="title_0" class="sample_title sample_title_active">island</span>
+                <span id="title_1" class="sample_title sample_title_inactive">clouds</span>
+                <span id="title_2" class="sample_title sample_title_inactive">water</span>
+                <span id="title_3" class="sample_title sample_title_inactive">frost</span>
+                <span id="title_4" class="sample_title sample_title_inactive">blood</span>
+
+                <div id="sample_0" class="sample_box sample_active">
+                    <div style="width: 512px; height: 512px; background-image: url('media/noise_island.png');"></div>
+
+                    <br/><br/>
+
+                    <b>Algorithm:</b> Simplex
+
+                    <br/><br/>
+
+                    <b>Octaves:</b> 9 <br/>
+                    <b>Persistence:</b> 0.52 <br/>
+                    <b>Scale:</b> 0.025
+
+                    <br/><br/>
+
+                    <b>Palette:</b> <input class="palette_sample" value="0,69,131,239,Solid;134,85,143,243,Solid;167,211,200,139,Solid;170,145,200,126,Solid;">
+                </div>
+
+                <div id="sample_1" class="sample_box sample_inactive">
+                    <div style="width: 512px; height: 512px; background-image: url('media/noise_clouds.png');"></div>
+
+                    <br/><br/>
+
+                    <b>Algorithm:</b> Perlin
+
+                    <br/><br/>
+
+                    <b>Octaves:</b> 6 <br/>
+                    <b>Persistence:</b> 0.6 <br/>
+                    <b>Scale:</b> 0.02
+
+                    <br/><br/>
+
+                    <b>Palette:</b> <input class="palette_sample" value="0,85,167,230,Smooth RGB;88,85,167,230,Smooth RGB;133,222,238,253,Smooth RGB;151,222,238,253,Smooth RGB;236,253,253,253,Smooth RGB;">
+                </div>
+
+                <div id="sample_2" class="sample_box sample_inactive">
+                    <div style="width: 512px; height: 512px; background-image: url('media/noise_water.png');"></div>
+
+                    <br/><br/>
+
+                    <b>Algorithm:</b> Worley
+
+                    <br/><br/>
+
+                    <b>Region Dimensions:</b> 128 <br/>
+                    <b>N Closest Points:</b> 1 <br/>
+                    <b>Density Mean:</b> 3 <br/>
+                    <b>Density Deviations:</b> 1
+
+                    <br/><br/>
+
+                    <b>Palette:</b> <input class="palette_sample" value="0,58,111,232,Smooth RGB;231,76,177,255,Solid;">
+                </div>
+
+                <div id="sample_3" class="sample_box sample_inactive">
+                    <div style="width: 512px; height: 512px; background-image: url('media/noise_frosty.png');"></div>
+
+                    <br/><br/>
+
+                    <b>Algorithm:</b> Worley
+
+                    <br/><br/>
+
+                    <b>Region Dimensions:</b> 64 <br/>
+                    <b>N Closest Points:</b> 5 <br/>
+                    <b>Density Mean:</b> 1 <br/>
+                    <b>Density Deviations:</b> 1
+
+                    <br/><br/>
+
+                    <b>Palette:</b> <input class="palette_sample" value="0,60,115,183,Smooth RGB;107,149,206,255,Smooth RGB;171,197,224,247,Smooth RGB;238,255,255,255,Smooth RGB;">
+                </div>
+
+                <div id="sample_4" class="sample_box sample_inactive">
+                    <div style="width: 512px; height: 512px; background-image: url('media/noise_blood.png');"></div>
+
+                    <br/><br/>
+
+                    <b>Algorithm:</b> Worley
+
+                    <br/><br/>
+
+                    <b>Region Dimensions:</b> 128 <br/>
+                    <b>N Closest Points:</b> 1 <br/>
+                    <b>Density Mean:</b> 5 <br/>
+                    <b>Density Deviations:</b> 1
+
+                    <br/><br/>
+
+                    <b>Palette:</b> <input class="palette_sample" value="0,136,50,30,Smooth RGB;24,159,67,46,Smooth RGB;64,228,67,31,Smooth RGB;109,35,35,35,Smooth RGB;155,0,0,0,Smooth RGB;">
+                </div>
+            </div>
+        </div> <!-- Contents -->
+
+        <div id="footer">
+            <span class="footer_span selective_link">by <a href="http://www.vertexfragment.com/">Steven Sell</a></span> . <span class="footer_span selective_link"><a href="about.html">about</a></span> . <span class="footer_span selective_link"><a href="https://github.com/ssell/noisegen">code</a></span></span>
+        </div>
+    </div> <!-- Holder -->
+</body>
+</html>

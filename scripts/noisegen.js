@@ -328,7 +328,7 @@ function buildColorProperties() {
 function populateColorTemplates() {
     var templates = [
         ["Islands", "0,58,111,232,Solid;110,76,177,255,Solid;145,253,255,138,Solid;153,96,232,88,Solid;216,234,255,252,Solid;"],
-        ["Clouds", ""]
+        ["Clouds", "0,76,177,255,Smooth RGB;53,101,173,230,Smooth RGB;107,76,177,255,Smooth RGB;120,145,207,255,Smooth RGB;134,204,221,236,Smooth RGB;202,223,235,245,Smooth RGB;"]
     ];
 
     var list = "";

@@ -40,7 +40,7 @@ label
 
 #holder{
     min-height: 100%;
-    position:relative;
+    position: relative;
 }
 
 #contents
@@ -78,12 +78,12 @@ label
     padding-right: 10px;
 }
 
-.footer_span a 
+.selective_link a 
 {
     color: #777;
 }
 
-.footer_span a:hover 
+.selective_link a:hover 
 {
     color: #CCFFCC;
 }
