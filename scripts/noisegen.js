@@ -304,6 +304,7 @@ function isValidHexString(string) {
 
     return true;
 }
+
 /**
  * 
  */
@@ -460,7 +461,8 @@ $(document).ready(function() {
 
     updateDimensions();
     triggerUIRebuild();
-
+    updatePaletteString();
+    
     $("#set_palette").click(function() { applyPaletteString(); });
     $("#generate_button").click(function() { generateStart(); });
     $("#export_button").click(function() { triggerExport(); });
