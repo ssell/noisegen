@@ -225,13 +225,6 @@ function toggleColorMode() {
 }
 
 /**
- * 
- */
-function onMultiRangeUpdate(multirange) {
-    
-}
-
-/**
  *
  */
 function generateStop() {
@@ -281,7 +274,7 @@ function applyColorPropertiesStart() {
     } else {
         descriptor = toPaletteDescriptor(gColorMultiRange);
     }
-    console.log(descriptor);
+    
     gSurface.setPalette(descriptor, gSurface.gray);
 
     NoiseProgressBar.start(gSurface.size(), "Applying Palette ...");
@@ -292,11 +285,148 @@ function applyColorPropertiesStart() {
     applyPaletteMultithreaded(gSurface, 2, applyColorPropertiesStop);
 }
 
+function isValidHexChar(char) {
+    return ((char >= '0') && (char <= '9')) || 
+           ((char >= 'a') && (char <= 'f')) || 
+           ((char >= 'A') && (char <= 'F'));
+}
+
+function isValidHexString(string) {
+    if(string.length != 7) {
+        return false;
+    }
+
+    for(var i = 1; i < string.length; ++i) {
+        if(!isValidHexChar(string[i])) {
+            return false;
+        }
+    }
+
+    return true;
+}
+/**
+ * 
+ */
+function applyPaletteString()
+{
+    var result = true;
+    var descriptor = $("#color_templates").val();
+
+    var segments = descriptor.split(";");
+    const numSegments = segments.length - 1;
+
+    if(numSegments > 0) {
+        var thumbValues   = new Array(numSegments - 1);
+        var segmentColors = new Array(numSegments);
+        var segmentModes  = new Array(numSegments);
+
+        //--------------------------------------------------------------------
+        // Parse the segment information from the string 
+
+        for(var i = 0; i < numSegments; ++i) {        // - 1: do not include split from final ';'
+            var segmentSplit = segments[i].split(",");
+
+            if(segmentSplit.length != 5) {
+                result = false;
+                break;
+            }
+
+            if(i != 0) {
+                // The first thumb value (always 0) is not needed as there is not a true thumb there.
+                thumbValues[i - 1] = Number(segmentSplit[0]);
+            }
+
+            segmentColors[i] = rgbToHex(Number(segmentSplit[1]), Number(segmentSplit[2]), Number(segmentSplit[3]));
+            segmentModes[i] = segmentSplit[4];
+        }
+        
+        if(result) {
+
+            //------------------------------------------------------------
+            // Validate each thumb value 
+
+            for(var i = 0; i < thumbValues.length; ++i) {
+                if(thumbValues[i] < 0 || thumbValues[i] > 255) {
+                    console.log("thumbValues[" + i + "] invalid (" + thumbValues[i] + ")");
+                    result = false;
+                    break;
+                }
+            }
+
+            //------------------------------------------------------------
+            // Validate segment colors 
+
+            for(var i = 0; i < segmentColors.length; ++i) {
+                if(!isValidHexString(segmentColors[i])) {
+                    console.log("segmentColors[" + i + "] invalid (" + segmentColors[i] + ")");
+                    result = false;
+                    break;
+                }
+            }
+
+            //------------------------------------------------------------
+            // Validate segment modes 
+
+            for(var i = 0; i < segmentModes.length; ++i) {
+                const upper = segmentModes[i].toUpperCase();
+
+                if((upper !== "SOLID") && (upper !== "SMOOTH RGB") && (upper !== "SMOOTH HSV") && (upper !== "NONE"))
+                {
+                    console.log("segmentModes[" + i + "] invalid (" + segmentModes[i] + ")");
+                    result = false;
+                    break;
+                }
+            }
+        }
+    } else {
+        result = false;
+    }
+
+    if(result) 
+    {
+        gColorMultiRange.load(thumbValues, segmentColors, segmentModes);
+        $("#color_templates").css("border-bottom", "1px solid transparent");
+    }
+    else
+    {
+        $("#color_templates").css("border-bottom", "1px solid #AA3333");
+    }
+}
+
+/**
+ * 
+ */
+function updatePaletteString()
+{
+    var paletteString = "";
+    var descriptor;
+
+    if(gSurface.gray) {
+        descriptor = toPaletteDescriptor(gGrayMultiRange);
+    } else {
+        descriptor = toPaletteDescriptor(gColorMultiRange);
+    }
+
+    for(var i = 0; i < descriptor.length; ++i) {
+        paletteString += descriptor[i] + ";"
+    }
+
+    $("#color_templates").val(paletteString);
+    $("#color_templates").css("border-bottom", "1px solid transparent");
+}
+
+/**
+ * 
+ */
+function multirangeUpdateCallback() {
+    updatePaletteString();
+}
+
 /**
  * 
  */
 function buildColorPropertiesGray() {
-    var multiranges = buildMultiRanges($("#ui_color_grayscale"));
+    var multiranges = buildMultiRanges($("#ui_color_grayscale"), multirangeUpdateCallback);
 
     if(multiranges.length) {
         gGrayMultiRange = multiranges[0];
@@ -307,7 +437,7 @@ function buildColorPropertiesGray() {
  * 
  */
 function buildColorPropertiesColor() {
-    var multiranges = buildMultiRanges($("#ui_color_color"));
+    var multiranges = buildMultiRanges($("#ui_color_color"), multirangeUpdateCallback);
 
     if(multiranges.length) {
         gColorMultiRange = multiranges[0];
@@ -322,44 +452,16 @@ function buildColorProperties() {
     buildColorPropertiesColor();
 }
 
-/**
- * 
- */ 
-function populateColorTemplates() {
-    var templates = [
-        ["Islands", "0,58,111,232,Solid;110,76,177,255,Solid;145,253,255,138,Solid;153,96,232,88,Solid;216,234,255,252,Solid;"],
-        ["Clouds", "0,76,177,255,Smooth RGB;53,101,173,230,Smooth RGB;107,76,177,255,Smooth RGB;120,145,207,255,Smooth RGB;134,204,221,236,Smooth RGB;202,223,235,245,Smooth RGB;"]
-    ];
-
-    var list = "";
-
-    for(var i = 0; i < templates.length; ++i)
-    {
-        list += "<option value='" + templates[i][0] + "'>" + templates[i][0] + "</option>";
-    }
-
-    $("#color_templates").append(list);
-}
-
-/**
- * 
- */
-function applyTemplateString()
-{
-
-}
-
 $(document).ready(function() {
     gSurface = new Surface();
 
     buildColorProperties();
-
     populateAlgorithmList();
-    populateColorTemplates();
 
     updateDimensions();
     triggerUIRebuild();
 
+    $("#set_palette").click(function() { applyPaletteString(); });
     $("#generate_button").click(function() { generateStart(); });
     $("#export_button").click(function() { triggerExport(); });
     $("#noise_algorithms").change(function() { triggerUIRebuild(); });

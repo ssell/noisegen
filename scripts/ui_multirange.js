@@ -275,7 +275,7 @@ class UIMultiRangeSegmentEditor {
  * 
  */
 class UIMultiRangeSegment {
-    constructor(parent, index, editable, color, mode) {
+    constructor(parent, index, editable, color, mode, updateCallback) {
         this.parent     = parent;
         this.parentObj  = parent.backgroundObj;
         this.index      = index;
@@ -286,6 +286,7 @@ class UIMultiRangeSegment {
         this.obj        = null;
         this.pos        = 0;
         this.width      = 0;
+        this.callback   = updateCallback;
     }
 
     /**
@@ -354,6 +355,10 @@ class UIMultiRangeSegment {
 
         this.obj.css("margin-left", this.pos);
         this.obj.css("width", this.width);
+
+        if(this.callback) {
+            this.callback();
+        }
     }
 
     /**
@@ -361,7 +366,7 @@ class UIMultiRangeSegment {
      */
     setMode(mode) {
         this.mode = mode;
-        this.updateBackground();
+        this.update();
     }
 
     /**
@@ -400,7 +405,12 @@ class UIMultiRangeSegment {
         this.parentObj.append("<div class='" + classes + "' />");
         this.obj = this.parentObj.find(".multirange_segment").last();
 
-        this.update();
+        this.calculatePosWidth();
+        this.updateBackground();
+
+        this.obj.css("margin-left", this.pos);
+        this.obj.css("width", this.width);
+
         this.bindActions();
     }
     
@@ -431,7 +441,6 @@ class UIMultiRange {
         this.step     = 0;
         this.min      = 0;
         this.max      = 0;
-        this.values   = null;
         this.thumbs   = null;
         this.segments = null;
     }
@@ -513,7 +522,7 @@ class UIMultiRange {
                 type = "none";
             }
 
-            this.segments[i] = new UIMultiRangeSegment(this, i, this.editable, color, type);
+            this.segments[i] = new UIMultiRangeSegment(this, i, this.editable, color, type, this.callback);
             this.segments[i].build();
         }
     }
@@ -536,7 +545,6 @@ class UIMultiRange {
             this.step     = Number(this.obj.data("rangestep"));
             this.min      = Number(this.obj.data("rangemin"));
             this.max      = Number(this.obj.data("rangemax"));
-            this.values   = Array.apply(0, Array(this.count)).map(function() { }); 
             this.thumbs   = Array.apply(0, Array(this.count)).map(function() { }); 
             this.segments = Array.apply(0, Array(this.count + 1)).map(function() { });
 
@@ -544,6 +552,36 @@ class UIMultiRange {
             this.buildThumbs();
             this.buildSegments();
         }
+    }
+
+    /**
+     * 
+     */
+    load(thumbs, colors, modes) {
+
+        for(var i = 0; i < this.thumbs.length; ++i) {
+            this.thumbs[i].destroy();
+        }
+
+        for(var i = 0; i < this.segments.length; ++i) {
+            this.segments[i].destroy();
+        }
+
+        this.count    = thumbs.length;
+        this.thumbs   = Array.apply(0, Array(this.count)).map(function() { }); 
+        this.segments = Array.apply(0, Array(this.count + 1)).map(function() { });
+
+        for(var i = 0; i < this.thumbs.length; i++) {
+            this.thumbs[i] = new UIMultiRangeThumb(this, i, thumbs[i]);
+            this.thumbs[i].build();
+        }
+
+        for(var i = 0; i < this.segments.length; i++) {
+            this.segments[i] = new UIMultiRangeSegment(this, i, this.editable, colors[i], modes[i], this.callback);
+            this.segments[i].build();
+        }
+
+        this.update();
     }
 
     /**
@@ -564,7 +602,7 @@ class UIMultiRange {
         }
 
         if(this.callback) {
-            this.callback(this);
+            this.callback();
         }
     }
 
@@ -631,7 +669,7 @@ class UIMultiRange {
                         this.thumbs[i].index = i;
                     }
 
-                    this.segments.splice(0, 0, new UIMultiRangeSegment(this, 0, segment.editable, segment.color, segment.mode));
+                    this.segments.splice(0, 0, new UIMultiRangeSegment(this, 0, segment.editable, segment.color, segment.mode, this.callback));
                     this.segments[0].build();
 
                     for(var i = 1; i < this.segments.length; ++i) {
@@ -648,7 +686,7 @@ class UIMultiRange {
                     this.thumbs.push(new UIMultiRangeThumb(this, rightThumbIndex, rightThumbValue));
                     this.thumbs[rightThumbIndex].build();
 
-                    this.segments.push(new UIMultiRangeSegment(this, segmentIndex + 1, segment.editable, segment.color, segment.mode));
+                    this.segments.push(new UIMultiRangeSegment(this, segmentIndex + 1, segment.editable, segment.color, segment.mode, this.callback));
                     this.segments[segmentIndex + 1].build();
                     this.segments[segmentIndex].update();
                 } else {
@@ -664,7 +702,7 @@ class UIMultiRange {
                         this.thumbs[i].index = i;
                     }
 
-                    this.segments.splice(rightThumbIndex, 0, new UIMultiRangeSegment(this, rightThumbIndex, segment.editable, segment.color, segment.mode));
+                    this.segments.splice(rightThumbIndex, 0, new UIMultiRangeSegment(this, rightThumbIndex, segment.editable, segment.color, segment.mode, this.callback));
                     this.segments[rightThumbIndex].build();
 
                     for(var i = rightThumbIndex; i < this.segments.length; ++i) {
@@ -796,5 +834,18 @@ function toPaletteDescriptor(multirange) {
     }
 
     return descriptor;
+}
+
+/**
+ * Converts an RGB value (r, g, b) to Hex 
+ */
+function rgbToHex(r, g, b) {
+    const rhex = r.toString(16);
+    const ghex = g.toString(16);
+    const bhex = b.toString(16);
+
+    return "#" + (rhex.length == 1 ? "0" + rhex : rhex) + 
+                 (ghex.length == 1 ? "0" + ghex : ghex) + 
+                 (bhex.length == 1 ? "0" + bhex : bhex);
 }
 

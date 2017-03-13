@@ -377,3 +377,16 @@ input[type=number]
 
     padding-bottom: 20px;
 }
+
+#color_templates
+{
+    background-color: transparent;
+
+    color: #777;
+    font-size: 10px;
+}
+
+#color_templates:focus 
+{
+    outline: none;
+}
