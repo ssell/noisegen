@@ -321,7 +321,7 @@ class Surface {
         this.rawImageData  = this.context.createImageData(this.width, this.height);
         this.rawMaxValue   = 0.0;
         this.rawMinValue   = 1.0;
-        this.gray          = true;
+        this.gray          = false;
         this.grayPalette   = new Palette();
         this.colorPalette  = new Palette();
         this.activePalette = (this.gray ? this.grayPalette : this.colorPalette);

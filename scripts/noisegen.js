@@ -242,15 +242,14 @@ function generateStop() {
  */
 function generateStart() {
 
-    NoiseProgressBar.start(gSurface.size(), "Generating ...");
 
     toggleGenerateButton();
     toggleApplyButton();
-
-    var noiseParams = buildNoiseParamsList();
-
     updateDimensions();
-    generateNoiseMultithreaded(gSurface, getSelectedAlgorithm(), getNormalized(), noiseParams, 2, generateStop);
+
+    NoiseProgressBar.start(gSurface.size(), "Generating ...");
+
+    generateNoiseMultithreaded(gSurface, getSelectedAlgorithm(), getNormalized(), buildNoiseParamsList(), 2, generateStop);
 }
 
 /**
