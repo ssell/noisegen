@@ -497,7 +497,7 @@ class Noise {
     constructor() {
 
         this.params = "";
-        this.seed   = 0;
+        this.seed   = 1337;
         this.width  = 0;           // Width of the active image data (in pixels)
         this.height = 0;           // Height of the active image data (in pixels)
         this.length = 0;           // Total length of the active image data (in bytes [4 bytes per pixel])
@@ -515,7 +515,8 @@ class Noise {
 
         switch(param) {
         case "seed":
-            this.setSeed(Number(value));
+            this.seed = clamp(Number(value), 17, 999983);
+            this.setSeed(this.seed);
             break;
 
         default:
@@ -727,7 +728,7 @@ class NoiseRandom extends Noise {
 
     static getParams() {
         super.getParams();
-        return "prng:select " + RandomXorShift32.type + " " + RandomXorShift128.type + " " + RandomWELL512.type + " " + RandomCMWC131104.type + ";seed:number 1337;";
+        return "prng:select " + RandomXorShift32.type + " " + RandomXorShift128.type + " " + RandomWELL512.type + " " + RandomCMWC131104.type + ";";
     }
 
     setSeed(value) {
@@ -831,7 +832,7 @@ class NoisePerlin extends Noise {
     }
 
     getRandom(x, y) {
-        var n = int32(x) + int32(y) * 57;
+        var n = int32(x) + int32(y) * (this.seed + 1);
         n = (n << 13) ^ n;
 
         // Note the gratuitous use of 'int32'. This is because the original C/C++ algorithms rely on 32-bit integer overflow behavior.
@@ -1169,7 +1170,6 @@ class NoiseWorley extends Noise {
         this.distances        = null;
         this.currX            = 0.0;
         this.currY            = 0.0;
-        this.seed             = 1337;
     }
 
     setParam(param, value) {
@@ -1208,7 +1208,7 @@ class NoiseWorley extends Noise {
 
     static getParams() {
         super.getParams();
-        return "region_dimensions:int_range 64 256 128;n_closest_points:int_range 1 5 1;density_mean:int_range 1 10 3;density_deviations:int_range 1 5 1;seed:number 1337;";
+        return "region_dimensions:int_range 64 256 128;n_closest_points:int_range 1 5 1;density_mean:int_range 1 10 3;density_deviations:int_range 1 5 1;";
     }
 
     insertDistance(distance) {

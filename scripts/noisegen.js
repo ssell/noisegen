@@ -77,6 +77,8 @@ function buildNoiseParamsList() {
         params += name + ":" + value + ";";
     });
 
+    params += "seed:" + uint32(Number($("#noise_seed").val())) + ";";
+
     return params;
 }
 
