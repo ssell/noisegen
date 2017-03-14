@@ -153,8 +153,6 @@ label
 .category_title
 {
     width: 100%;
-    border-bottom: 1px solid #555;
-    margin-bottom: 20px;
     font-size: 16px;
 }
 
@@ -389,4 +387,17 @@ input[type=number]
 #color_templates:focus 
 {
     outline: none;
+}
+
+.minimize
+{
+    top: 0;
+    float: right;
+
+    font-size: 18px;
+    height: 10px;
+    line-height: 10px;
+    font-weight: 700;
+
+    cursor: pointer;
 }

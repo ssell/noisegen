@@ -32,56 +32,64 @@
                 <div id="ui_general" class="ui_category">
                     <div class="category_title">
                         General Properties 
-                        <span class="information selective_link"><a href="samples.html">see samples</a></span>
+                        <span id="minimize_general" class="minimize selective_link"><a>&#x25BE;</a></span>
                     </div>
-                    <div>
-                        <div class="ui_holder ui_title">Noise Algorithm</div>
-                        <div class="ui_holder"><select id="noise_algorithms" name="noise_algorithms" class="ui_element"></select></div>
-                    </div>
-                    <div>
-                        <div class="ui_holder ui_title">Width</div>
-                        <div class="ui_holder"><input id="surface_width" type="number" class="ui_element"></div>
-                    </div>
-                    <div>
-                        <div class="ui_holder ui_title">Height</div>
-                        <div class="ui_holder"><input id="surface_height" type="number" class="ui_element"></div>
-                    </div>
-                    <div>
-                        <div class="ui_holder ui_title">Seed</div>
-                        <div class="ui_holder"><input id="noise_seed" type="number" class="ui_element" value="1337"></div>
-                    </div>
-                    <div>
-                        <div class="ui_holder"><label class="ui_title"><input id="noise_normalized" class="ui_checkbox" type="checkbox" checked/>Normalized</label></div>
+                    <div id="general_content" style="margin-top: 20px;">
+                        <div>
+                            <div class="ui_holder ui_title">Noise Algorithm</div>
+                            <div class="ui_holder"><select id="noise_algorithms" name="noise_algorithms" class="ui_element"></select></div>
+                        </div>
+                        <div>
+                            <div class="ui_holder ui_title">Width</div>
+                            <div class="ui_holder"><input id="surface_width" type="number" class="ui_element"></div>
+                        </div>
+                        <div>
+                            <div class="ui_holder ui_title">Height</div>
+                            <div class="ui_holder"><input id="surface_height" type="number" class="ui_element"></div>
+                        </div>
+                        <div>
+                            <div class="ui_holder ui_title">Seed</div>
+                            <div class="ui_holder"><input id="noise_seed" type="number" class="ui_element" value="1337"></div>
+                        </div>
+                        <div>
+                            <div class="ui_holder"><label class="ui_title"><input id="noise_normalized" class="ui_checkbox" type="checkbox" checked/>Normalized</label></div>
+                        </div>
+                        <div class="ui_holder" style="margin-bottom: 0px;"> 
+                            <span class="selective_link"><a href="samples.html">see samples</a></span>
+                        </div>
                     </div>
                 </div>
 
                 <div id="ui_color" class="ui_category">
                     <div class="category_title">
                         Color Properties
+                        <span id="minimize_color" class="minimize selective_link"><a>&#x25BE;</a></span> 
                     </div>
-                    <div id="ui_color_buttons">
-                        <div class="ui_holder">
-                            <button id="grayscale_button" class="normal_button color_button">Grayscale</button>
-                            <button id="color_button" class="normal_button color_button color_button_selected">Color</button>
-                            <button id="color_apply_button" class="normal_button">Apply</button>
+                    <div id="color_content" style="margin-top: 20px;">
+                        <div id="ui_color_buttons">
+                            <div class="ui_holder">
+                                <button id="grayscale_button" class="normal_button color_button">Grayscale</button>
+                                <button id="color_button" class="normal_button color_button color_button_selected">Color</button>
+                                <button id="color_apply_button" class="normal_button">Apply</button>
+                            </div>
                         </div>
-                    </div>
-                    <div id="ui_color_grayscale" class="hidden">
-                        <div class="ui_holder ui_title">Scale Modifer</div>
-                        <div class="ui_holder">
-                            <div id="grayscale_multirange" class="multirange" data-rangeedit="false" data-rangecount="2" data-rangestep="1" data-rangemin="0" data-rangemax="255" data-rangevalues="0,255" data-rangecolors="#000000,#CCCCCC,#FFFFFF" data-rangetypes="Solid,None,Solid"></div>
+                        <div id="ui_color_grayscale" class="hidden">
+                            <div class="ui_holder ui_title">Scale Modifer</div>
+                            <div class="ui_holder">
+                                <div id="grayscale_multirange" class="multirange" data-rangeedit="false" data-rangecount="2" data-rangestep="1" data-rangemin="0" data-rangemax="255" data-rangevalues="0,255" data-rangecolors="#000000,#CCCCCC,#FFFFFF" data-rangetypes="Solid,None,Solid"></div>
+                            </div>
                         </div>
-                    </div>
-                    <div id="ui_color_color">
-                        <div class="ui_holder ui_title">
-                            Palette
-                        </div>
-                        <div class="ui_holder">
-                            <div id="color_multirange" class="multirange" data-rangeedit="true" data-rangecount="4" data-rangestep="1" data-rangemin="0" data-rangemax="255" data-rangevalues="145,170,185,245" data-rangecolors="#3A6FE8,#4CB1FF,#FDFF8A,#60E858,#EAFFFC" data-rangetypes="Solid,Solid,Solid,Solid,Solid"></div>
-                        </div>
-                        <div class="ui_holder">
-                            <span class="information selective_link" style="float: none;"><a id="set_palette">load</a></span>
-                            <input id="color_templates" name="color_templates" class="ui_element">
+                        <div id="ui_color_color">
+                            <div class="ui_holder ui_title">
+                                Palette
+                            </div>
+                            <div class="ui_holder">
+                                <div id="color_multirange" class="multirange" data-rangeedit="true" data-rangecount="4" data-rangestep="1" data-rangemin="0" data-rangemax="255" data-rangevalues="145,170,185,245" data-rangecolors="#3A6FE8,#4CB1FF,#FDFF8A,#60E858,#EAFFFC" data-rangetypes="Solid,Solid,Solid,Solid,Solid"></div>
+                            </div>
+                            <div class="ui_holder">
+                                <span class="information selective_link" style="float: none;"><a id="set_palette">load</a></span>
+                                <input id="color_templates" name="color_templates" class="ui_element">
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -89,8 +97,9 @@
                 <div id="ui_noise" class="ui_category">
                     <div class="category_title">
                         Noise Properties
+                        <span id="minimize_noise" class="minimize selective_link"><a>&#x25BE;</a></span> 
                     </div>
-                    <div id="noise_properties"></div>
+                    <div id="noise_content" style="margin-top: 20px;"></div>
                 </div>
 
                 <div class="ui_holder">

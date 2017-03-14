@@ -63,7 +63,7 @@ function getNormalized() {
 function buildNoiseParamsList() {
     var params = "";
 
-    $("#noise_properties .noise_property_value").each(function() {
+    $("#noise_content .noise_property_value").each(function() {
         var id    = $(this).attr('id');
         var name  = id.substr(0, (id.length - 6));    // Remove the '_value'
         var value = "";
@@ -175,11 +175,11 @@ function triggerExport() {
 function triggerUIRebuild() {
     buildUI(getUIParams(getSelectedAlgorithm()));
 
-    $("#noise_properties .ui_element").change(function(){ 
+    $("#noise_content .ui_element").change(function(){ 
         updateInput($(this).attr('id')); 
     });
 
-    $("#noise_properties .noise_property_value").change(function() {
+    $("#noise_content .noise_property_value").change(function() {
         // If the user has manually modified the noise value, update the associated .ui_element.
         var parent = $(this).parent().parent().find(".ui_element").val($(this).val());
     })
@@ -454,6 +454,24 @@ function buildColorProperties() {
     buildColorPropertiesColor();
 }
 
+/**
+ * 
+ */
+function handleMinimize(id) {
+    const section = id.split("_")[1] + "_content";
+    const content = $("#" + section);
+
+    if(content) {
+        if(content.hasClass("hidden")) {
+            content.removeClass("hidden");
+            $("#" + id).html("<a>&#x25BE;</a>");
+        } else {
+            content.addClass("hidden");
+            $("#" + id).html("<a>&#x25C2;</a>");
+        }
+    }
+}
+
 $(document).ready(function() {
     gSurface = new Surface();
 
@@ -470,4 +488,5 @@ $(document).ready(function() {
     $("#noise_algorithms").change(function() { triggerUIRebuild(); });
     $(".color_button").click(function() { toggleColorMode(); });
     $("#color_apply_button").click(function() { applyColorPropertiesStart(); });
+    $(".minimize").click(function() { handleMinimize($(this).attr("id")); });
 });

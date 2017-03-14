@@ -186,7 +186,7 @@ function buildSelect(id, values) {
 
 
 /**
- * Builds and populates the '#noise_properties' div.
+ * Builds and populates the '#noise_content' div.
  * Input a string containing parameters that may be customized by the user for the noise algorithm.
  * 
  * The params string is expected to be formatted as:
@@ -258,6 +258,6 @@ function buildUI(params) {
         html += "</div>";
     }
 
-    $("#noise_properties").empty();
-    $("#noise_properties").append(html);
+    $("#noise_content").empty();
+    $("#noise_content").append(html);
 }
