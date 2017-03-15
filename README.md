@@ -8,6 +8,11 @@ For the cutting-edge, which may be incomplete or unstable, visit:
 
 [http://nightly.noisegen.io](http://nightly.noisegen.io/)
 
+Last verified on,
+
+* Chrome v57.0.2987.98
+* Firefox v52.0
+
 ## Overview
 
 **noisegen** is a web-tool used to generate noise and coherent noise using a variety of algorithms.
