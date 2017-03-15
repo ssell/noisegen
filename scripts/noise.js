@@ -727,7 +727,6 @@ class NoiseRandom extends Noise {
     }
 
     static getParams() {
-        super.getParams();
         return "prng:select " + RandomXorShift32.type + " " + RandomXorShift128.type + " " + RandomWELL512.type + " " + RandomCMWC131104.type + ";";
     }
 
@@ -737,12 +736,10 @@ class NoiseRandom extends Noise {
     }
 
     getPixelRaw(x, y) {
-        super.getPixelRaw();
         return this.prng.next(0, 255);
     }
 
     getPixel(x, y) {
-        super.getPixel();
         return this.getPixelRaw(x, y);
     }
 }
@@ -827,7 +824,6 @@ class NoisePerlin extends Noise {
     }
 
     static getParams() {
-        super.getParams();
         return "octaves:int_range 1 20 6;persistence:float_range 0.0 1.0 0.6;scale:float_range 0.0001 0.1 0.02;";
     }
 
@@ -895,12 +891,10 @@ class NoisePerlin extends Noise {
     }
 
     getPixelRaw(x, y) {
-        super.getPixelRaw(x, y);
         return (this.getValue(x + this.seed, y + this.seed));
     }
 
     getPixel(x, y) {
-        super.getPixel(x, y);
         return ((this.getPixelRaw(x, y) + 1.0) * 0.5) * 255; // Perlin noise generates values on the range of [-1.0, 1.0] but for our pixels we require a color on the range [0, 255]
     }
 }
@@ -992,8 +986,7 @@ class NoiseSimplex extends Noise {
     }
 
     static getParams() {
-        super.getParams();
-        return "octaves:int_range 1 20 5;persistence:float_range 0.0 1.0 0.5;scale:float_range 0.0001 0.1 0.005;"
+        return "octaves:int_range 1 20 9;persistence:float_range 0.0 1.0 0.52;scale:float_range 0.0001 0.1 0.0025;"
     }
 
     getRawNoise(x, y) {
@@ -1098,7 +1091,6 @@ class NoiseSimplex extends Noise {
     }
     
     getPixelRaw(x, y) {
-        super.getPixelRaw(x, y);
         return (this.getValue(x + this.seed, y + this.seed));
     }
 
@@ -1189,7 +1181,6 @@ class NoiseWorley extends Noise {
     }
 
     static getParams() {
-        super.getParams();
         return "region_dimensions:int_range 64 256 128;n_closest_points:int_range 1 5 1;density_mean:int_range 1 10 3;density_deviations:int_range 1 5 1;";
     }
 
@@ -1317,7 +1308,6 @@ class NoiseWorley extends Noise {
     }
 
     getPixelRaw(x, y) {
-        super.getPixelRaw(x, y);
         return this.getValue(x, y);
     }
 
