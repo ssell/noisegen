@@ -1,5 +1,9 @@
 html,body
 {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    
     color: #AAA;
     background-color: #333;
     font-family: 'Lato', sans-serif;
@@ -153,7 +157,6 @@ label
 .category_title
 {
     width: 100%;
-    //margin-bottom: 20px;
     font-size: 16px;
 }
 
