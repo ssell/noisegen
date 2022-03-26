@@ -1,3 +1,7 @@
+**NOTE:** This project is no longer maintained. However an archived version of the site/tool is available at: 
+
+https://www.vertexfragment.com/noisegen/
+
 # noisegen
 
 For the most recent **stable** release, visit:
